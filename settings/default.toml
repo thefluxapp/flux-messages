@@ -1,0 +1,7 @@
+_name = "flux-core"
+
+[http]
+endpoint = "0.0.0.0:3000"
+
+[nats]
+endpoint = "0.0.0.0:4222"

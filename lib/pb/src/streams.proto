@@ -1,0 +1,15 @@
+syntax = "proto3";
+package flux.streams;
+
+service Streams {
+    rpc GetStream (GetStreamRequest) returns (GetStreamResponse);
+}
+
+message GetStreamRequest {
+    optional string foo = 1;
+
+}
+
+message GetStreamResponse {
+    optional string bar = 1;
+}

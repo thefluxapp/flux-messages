@@ -1,0 +1,3 @@
+pub const STREAMS_FILE_DESCRIPTOR_SET: &[u8] = tonic::include_file_descriptor_set!("streams_descriptor");
+
+tonic::include_proto!("flux.streams");
