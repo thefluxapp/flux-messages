@@ -1,0 +1,16 @@
+syntax = "proto3";
+package flux.messages;
+
+service MessagesService {
+    rpc Create(CreateRequest) returns (CreateResponse);
+}
+
+message CreateRequest {
+    optional string text = 1;
+    optional string message_id = 2;
+    optional string user_id = 3;
+}
+
+message CreateResponse {
+    optional string message_id = 1;
+}
