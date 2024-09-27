@@ -5,6 +5,7 @@ use settings::AppSettings;
 use state::AppState;
 use tonic::service::Routes;
 
+mod error;
 mod messages;
 mod settings;
 mod state;

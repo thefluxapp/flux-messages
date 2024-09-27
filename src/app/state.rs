@@ -2,13 +2,15 @@ use std::sync::Arc;
 
 use anyhow::Error;
 use async_nats::jetstream;
+use sea_orm::{ConnectOptions, Database, DbConn};
 
 use super::{settings::AppSettings, AppJS};
 
 #[derive(Clone)]
 pub struct AppState {
     pub settings: AppSettings,
-    pub _js: Arc<AppJS>,
+    pub db: Arc<DbConn>,
+    pub js: Arc<AppJS>,
 }
 
 impl AppState {
@@ -16,6 +18,11 @@ impl AppState {
         let nats = async_nats::connect(&settings.nats.endpoint).await?;
         let js = Arc::new(jetstream::new(nats));
 
-        Ok(Self { settings, _js: js })
+        let opt = ConnectOptions::new(&settings.db.endpoint);
+        // opt.sqlx_logging(true)
+        //     .sqlx_logging_level(log::LevelFilter::Info);
+        let db = Arc::new(Database::connect(opt).await?);
+
+        Ok(Self { settings, js, db })
     }
 }

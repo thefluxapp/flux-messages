@@ -8,6 +8,7 @@ pub struct AppSettings {
     pub _name: String,
     pub http: HttpSettings,
     pub nats: NATSSettings,
+    pub db: DBSettings,
 }
 
 #[derive(Deserialize, Clone)]
@@ -17,6 +18,11 @@ pub struct HttpSettings {
 
 #[derive(Deserialize, Clone)]
 pub struct NATSSettings {
+    pub endpoint: String,
+}
+
+#[derive(Deserialize, Clone)]
+pub struct DBSettings {
     pub endpoint: String,
 }
 

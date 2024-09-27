@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [workspace]
-members = ["lib/api"]
+members = ["lib/api", "lib/migration"]
 resolver = "2"
 
 [dependencies]
