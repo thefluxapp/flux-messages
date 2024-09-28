@@ -18,13 +18,13 @@ uuid = { version = "1.10.0", features = ["v7"] }
 chrono = "0.4.38"
 
 
-axum = "0.7.6"
+axum = "0.7.7"
 
 tokio = { version = "1.40.0", features = ["full"] }
 
-tonic = "0.12.2"
-tonic-health = "0.12.2"
-tonic-reflection = "0.12.2"
+tonic = "0.12.3"
+tonic-health = "0.12.3"
+tonic-reflection = "0.12.3"
 
 async-nats = "0.36.0"
 

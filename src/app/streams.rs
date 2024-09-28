@@ -1,10 +1,12 @@
-// use tonic::client::GrpcService;
+use flux_core_api::streams_service_server::StreamsServiceServer;
+use grpc::GrpcStreamsService;
 
-use flux_core_pb::streams_server::StreamsServer;
-use grpc::StreamsService;
+use super::state::AppState;
 
 mod grpc;
+mod repo;
+mod service;
 
-pub fn service() -> StreamsServer<StreamsService> {
-  StreamsServer::new(StreamsService::default())
+pub fn streams_service(state: AppState) -> StreamsServiceServer<GrpcStreamsService> {
+    StreamsServiceServer::new(GrpcStreamsService::new(state))
 }

@@ -5,6 +5,11 @@ fn main() {
 
     tonic_build::configure()
         .file_descriptor_set_path(out_dir.join("messages_descriptor.bin"))
-        .compile(&["src/messages.proto"], &["src"])
+        .compile_protos(&["src/messages.proto"], &["src"])
+        .unwrap();
+
+    tonic_build::configure()
+        .file_descriptor_set_path(out_dir.join("streams_descriptor.bin"))
+        .compile_protos(&["src/streams.proto"], &["src"])
         .unwrap();
 }

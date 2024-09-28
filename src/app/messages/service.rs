@@ -8,7 +8,10 @@ use crate::app::error::AppError;
 
 use super::repo;
 
-pub async fn create(db: &DbConn, request: CreateRequest) -> Result<CreateResponse, Error> {
+pub async fn create(
+    db: &DbConn,
+    request: CreateMessageRequest,
+) -> Result<CreateMessageResponse, Error> {
     let txn = db.begin().await?;
 
     let message = repo::create_message(
@@ -82,17 +85,17 @@ pub async fn create(db: &DbConn, request: CreateRequest) -> Result<CreateRespons
 
     txn.commit().await?;
 
-    Ok(CreateResponse {
+    Ok(CreateMessageResponse {
         message_id: Uuid::now_v7(),
     })
 }
 
 #[derive(Validate)]
-pub struct CreateRequest {
+pub struct CreateMessageRequest {
     pub text: String,
     pub user_id: Uuid,
     pub message_id: Option<Uuid>,
 }
-pub struct CreateResponse {
+pub struct CreateMessageResponse {
     pub message_id: Uuid,
 }

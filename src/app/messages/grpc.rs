@@ -1,4 +1,6 @@
-use flux_core_api::{messages_service_server::MessagesService, CreateRequest, CreateResponse};
+use flux_core_api::{
+    messages_service_server::MessagesService, CreateMessageRequest, CreateMessageResponse,
+};
 use tonic::{Request, Response, Status};
 use uuid::Uuid;
 use validator::{Validate as _, ValidationErrors};
@@ -19,32 +21,29 @@ impl GrpcMessagesService {
 
 #[tonic::async_trait]
 impl MessagesService for GrpcMessagesService {
-    async fn create(
+    async fn create_message(
         &self,
-        request: Request<CreateRequest>,
-    ) -> Result<Response<CreateResponse>, Status> {
+        request: Request<CreateMessageRequest>,
+    ) -> Result<Response<CreateMessageResponse>, Status> {
         let response = create(&self.state, request.into_inner()).await?;
 
         Ok(Response::new(response))
-        // Ok(Response::new(CreateResponse {
-        //     message_id: Some("QQQQ".into()),
-        // }))
     }
 }
 
 async fn create(
     AppState { db, .. }: &AppState,
-    request: CreateRequest,
-) -> Result<CreateResponse, AppError> {
+    request: CreateMessageRequest,
+) -> Result<CreateMessageResponse, AppError> {
     let response = service::create(db, request.try_into()?).await?;
 
     Ok(response.into())
 }
 
-impl TryFrom<CreateRequest> for service::CreateRequest {
+impl TryFrom<CreateMessageRequest> for service::CreateMessageRequest {
     type Error = AppError;
 
-    fn try_from(request: CreateRequest) -> Result<Self, Self::Error> {
+    fn try_from(request: CreateMessageRequest) -> Result<Self, Self::Error> {
         let data = Self {
             text: request.text().into(),
             user_id: Uuid::parse_str(request.user_id())
@@ -63,9 +62,9 @@ impl TryFrom<CreateRequest> for service::CreateRequest {
     }
 }
 
-impl Into<CreateResponse> for service::CreateResponse {
-    fn into(self) -> CreateResponse {
-        CreateResponse {
+impl Into<CreateMessageResponse> for service::CreateMessageResponse {
+    fn into(self) -> CreateMessageResponse {
+        CreateMessageResponse {
             message_id: Some(self.message_id.into()),
         }
     }
