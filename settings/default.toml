@@ -8,3 +8,7 @@ endpoint = "postgres://postgres:postgres@0.0.0.0:5432/flux-core"
 
 [nats]
 endpoint = "0.0.0.0:4222"
+
+[streams.messaging.subjects]
+request = "flux.streams.summarize.request"
+response = "flux.streams.summarize.response"

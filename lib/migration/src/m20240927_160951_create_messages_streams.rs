@@ -10,7 +10,7 @@ impl MigrationTrait for Migration {
             .create_table(
                 table_auto(MessagesStreams::Table)
                     .col(uuid(MessagesStreams::Id).primary_key())
-                    .col(uuid(MessagesStreams::MessageId))
+                    .col(uuid_uniq(MessagesStreams::MessageId))
                     .col(uuid(MessagesStreams::StreamId))
                     .to_owned(),
             )
@@ -19,7 +19,7 @@ impl MigrationTrait for Migration {
         manager
             .create_index(
                 Index::create()
-                    .name("idx_messages_streams_message_id_streams_id")
+                    .name("messages_streams_idx_message_id_streams_id")
                     .unique()
                     .table(MessagesStreams::Table)
                     .col(MessagesStreams::MessageId)
@@ -37,7 +37,7 @@ impl MigrationTrait for Migration {
 }
 
 #[derive(DeriveIden)]
-enum MessagesStreams {
+pub enum MessagesStreams {
     Table,
     Id,
     MessageId,
