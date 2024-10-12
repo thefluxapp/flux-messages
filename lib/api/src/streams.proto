@@ -20,7 +20,7 @@ message GetStreamsResponse {
 message SummarizeStreamRequest {
     optional string stream_id = 1;
     repeated Message messages = 2;
-    optional int64 updated_at = 3;
+    optional int64 version = 3;
 
     message Message {
         optional string message_id = 1;
@@ -31,5 +31,5 @@ message SummarizeStreamRequest {
 message SummarizeStreamResponse {
     optional string stream_id = 1;
     optional string text = 2;
-    optional int64 updated_at = 3;
+    optional int64 version = 3;
 }

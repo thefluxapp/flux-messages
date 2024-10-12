@@ -124,7 +124,7 @@ pub async fn summarize_stream_by_message_id(
                 user_id: Some(message.user_id.into()),
             })
             .collect(),
-        updated_at: Some(stream.updated_at.and_utc().timestamp_millis()),
+        version: Some(Utc::now().timestamp_millis()),
     };
 
     let mut buf = BytesMut::new();

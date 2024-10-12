@@ -29,13 +29,6 @@ impl MessagesService for GrpcMessagesService {
     ) -> Result<Response<CreateMessageResponse>, Status> {
         let response = create_message(&self.state, request.into_inner()).await?;
 
-        if let Some(ref stream) = response.stream {
-            tokio::spawn(summarize_stream_by_message_id(
-                self.state.clone(),
-                stream.clone(),
-            ));
-        }
-
         Ok(Response::new(response.into()))
     }
 
@@ -54,6 +47,13 @@ async fn create_message(
     request: CreateMessageRequest,
 ) -> Result<service::CreateMessageResponse, AppError> {
     let response = service::create_message(&state.db, request.try_into()?).await?;
+
+    if let Some(ref stream) = response.stream {
+        tokio::spawn(summarize_stream_by_message_id(
+            state.clone(),
+            stream.clone(),
+        ));
+    }
 
     Ok(response)
 }
