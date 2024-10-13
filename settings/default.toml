@@ -1,0 +1,18 @@
+_name = "flux-core"
+
+[http]
+endpoint = "0.0.0.0:3000"
+
+[db]
+endpoint = "postgres://postgres:postgres@0.0.0.0:5432/flux-core"
+
+[nats]
+endpoint = "0.0.0.0:4222"
+
+[streams.messaging]
+name = "flux"
+consumer = "flux-core"
+
+[streams.messaging.subjects]
+request = "flux.streams.summarize.request"
+response = "flux.streams.summarize.response"

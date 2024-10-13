@@ -1,0 +1,35 @@
+syntax = "proto3";
+package flux.streams;
+
+service StreamsService {
+    rpc GetStreams(GetStreamsRequest) returns (GetStreamsResponse);
+}
+
+message GetStreamsRequest {}
+
+message GetStreamsResponse {
+    repeated Stream streams = 1;
+
+    message Stream {
+        optional string id = 1;
+        optional string message_id = 2;
+        optional string text = 3;
+    }
+}
+
+message SummarizeStreamRequest {
+    optional string stream_id = 1;
+    repeated Message messages = 2;
+    optional int64 version = 3;
+
+    message Message {
+        optional string message_id = 1;
+        optional string user_id = 2;
+    }
+}
+
+message SummarizeStreamResponse {
+    optional string stream_id = 1;
+    optional string text = 2;
+    optional int64 version = 3;
+}
