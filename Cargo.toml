@@ -29,7 +29,7 @@ tonic-reflection = "0.12.3"
 
 async-nats = "0.36.0"
 
-sea-orm = { version = "1.0.1", features = [
+sea-orm = { version = "1.1.0-rc.3", features = [
     "sqlx-postgres",
     "runtime-tokio-rustls",
 ] }
