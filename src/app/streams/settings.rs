@@ -7,6 +7,8 @@ pub struct StreamsSettings {
 
 #[derive(Deserialize, Clone)]
 pub struct MessagingSettings {
+    pub name: String,
+    pub consumer: String,
     pub subjects: MessagingSubjectsSettings,
 }
 

@@ -12,6 +12,7 @@ flux-core-api = { path = "lib/api" }
 
 anyhow = "1.0.89"
 thiserror = "1.0.64"
+futures-lite = "2.3.0"
 config = { version = "0.14", default-features = false, features = ["toml"] }
 validator = { version = "0.18.1", features = ["derive"] }
 uuid = { version = "1.10.0", features = ["v7"] }

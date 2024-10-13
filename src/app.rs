@@ -15,14 +15,13 @@ pub async fn run() -> Result<(), Error> {
     let settings = AppSettings::new()?;
     let state = AppState::new(settings).await?;
 
-    // messaging(&state).await?;
-    // execution(&state).await?;
-    http(&state).await?;
+    messaging(&state).await?;
+    http_and_grpc(&state).await?;
 
     Ok(())
 }
 
-async fn http(state: &AppState) -> Result<(), Error> {
+async fn http_and_grpc(state: &AppState) -> Result<(), Error> {
     let reflection_service = tonic_reflection::server::Builder::configure()
         .register_encoded_file_descriptor_set(tonic_health::pb::FILE_DESCRIPTOR_SET)
         .register_encoded_file_descriptor_set(flux_core_api::MESSAGES_FILE_DESCRIPTOR_SET)
@@ -43,6 +42,12 @@ async fn http(state: &AppState) -> Result<(), Error> {
     let listener = tokio::net::TcpListener::bind(&state.settings.http.endpoint).await?;
 
     axum::serve(listener, router).await?;
+
+    Ok(())
+}
+
+async fn messaging(state: &AppState) -> Result<(), Error> {
+    streams::messaging(&state).await?;
 
     Ok(())
 }

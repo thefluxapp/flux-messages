@@ -998,6 +998,7 @@ dependencies = [
  "chrono",
  "config",
  "flux-core-api",
+ "futures-lite",
  "prost",
  "sea-orm",
  "serde",
