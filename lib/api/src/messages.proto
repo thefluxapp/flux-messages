@@ -25,6 +25,7 @@ message GetMessagesResponse {
 
     message Message {
         optional string message_id = 1;
-        optional string text = 2;
+        optional string user_id = 2;
+        optional string text = 3;
     }
 }

@@ -5,9 +5,32 @@ use sea_orm::{
 };
 use uuid::Uuid;
 
+pub mod message_stream;
 pub mod stream;
 
-pub async fn find_all_streams<T: ConnectionTrait>(db: &T) -> Result<Vec<stream::Model>, Error> {
+pub async fn find_stream_by_message_id<T: ConnectionTrait>(
+    db: &T,
+    message_id: Uuid,
+) -> Result<Option<stream::Model>, Error> {
+    let stream = stream::Entity::find()
+        .filter(stream::Column::MessageId.eq(message_id))
+        .one(db)
+        .await?;
+
+    Ok(stream)
+}
+
+pub async fn find_messages_by_stream_id<T: ConnectionTrait>(
+    db: &T,
+    stream_id: Uuid,
+) -> Result<Vec<message_stream::Model>, Error> {
+    Ok(message_stream::Entity::find()
+        .filter(message_stream::Column::StreamId.eq(stream_id))
+        .all(db)
+        .await?)
+}
+
+pub async fn find_streams<T: ConnectionTrait>(db: &T) -> Result<Vec<stream::Model>, Error> {
     let streams = stream::Entity::find().all(db).await?;
 
     Ok(streams)

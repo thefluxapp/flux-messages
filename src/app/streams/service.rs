@@ -4,8 +4,41 @@ use summarize_stream::SummarizeStreamRequest;
 
 use super::repo;
 
+pub async fn get_stream(
+    db: &DbConn,
+    request: get_stream::Request,
+) -> Result<get_stream::Response, Error> {
+    let stream = repo::find_stream_by_message_id(db, request.message_id).await?;
+    let messages_streams = match stream {
+        Some(ref stream) => repo::find_messages_by_stream_id(db, stream.id).await?,
+        None => vec![],
+    };
+
+    Ok(get_stream::Response {
+        stream,
+        messages_streams,
+    })
+}
+
+pub mod get_stream {
+    use uuid::Uuid;
+    use validator::Validate;
+
+    use crate::app::streams::repo;
+
+    #[derive(Validate)]
+    pub struct Request {
+        pub message_id: Uuid,
+    }
+    #[derive(Debug)]
+    pub struct Response {
+        pub stream: Option<repo::stream::Model>,
+        pub messages_streams: Vec<repo::message_stream::Model>,
+    }
+}
+
 pub async fn get_streams(db: &DbConn) -> Result<GetStreamsResponse, Error> {
-    let streams = repo::find_all_streams(db).await?;
+    let streams = repo::find_streams(db).await?;
 
     Ok(GetStreamsResponse { streams })
 }

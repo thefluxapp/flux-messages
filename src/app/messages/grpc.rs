@@ -130,6 +130,7 @@ impl Into<GetMessagesResponse> for service::GetMessagesResponse {
                 .iter()
                 .map(|message| Message {
                     message_id: Some(message.id.into()),
+                    user_id: Some(message.user_id.into()),
                     text: Some(message.text.clone()),
                 })
                 .collect(),
