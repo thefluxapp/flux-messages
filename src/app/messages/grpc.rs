@@ -100,9 +100,9 @@ mod get_message {
                     None => None,
                 },
                 message_ids: res
-                    .messages_streams
+                    .message_ids
                     .iter()
-                    .map(|m| m.message_id.into())
+                    .map(|message_id| message_id.to_string())
                     .collect(),
             }
         }
