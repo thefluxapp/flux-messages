@@ -99,6 +99,11 @@ mod get_message {
                     Some(stream) => Some(stream.into()),
                     None => None,
                 },
+                message_ids: res
+                    .messages_streams
+                    .iter()
+                    .map(|m| m.message_id.into())
+                    .collect(),
             }
         }
     }

@@ -115,3 +115,13 @@ pub async fn find_stream_by_message_id<T: ConnectionTrait>(
 
     Ok(message)
 }
+
+pub async fn find_messages_by_stream_id<T: ConnectionTrait>(
+    db: &T,
+    stream_id: Uuid,
+) -> Result<Vec<message_stream::Model>, Error> {
+    Ok(message_stream::Entity::find()
+        .filter(message_stream::Column::StreamId.eq(stream_id))
+        .all(db)
+        .await?)
+}

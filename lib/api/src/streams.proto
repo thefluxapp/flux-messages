@@ -2,23 +2,7 @@ syntax = "proto3";
 package flux.streams;
 
 service StreamsService {
-    rpc GetStream(GetStreamRequest) returns (GetStreamResponse);
     rpc GetStreams(GetStreamsRequest) returns (GetStreamsResponse);
-}
-
-message GetStreamRequest {
-    optional string message_id = 1;
-}
-
-message GetStreamResponse {
-    optional Stream stream = 1;
-    repeated string message_ids = 2;
-
-    message Stream {
-        optional string stream_id = 1;
-        optional string message_id = 2;
-        optional string text = 3;
-    }
 }
 
 message GetStreamsRequest {}

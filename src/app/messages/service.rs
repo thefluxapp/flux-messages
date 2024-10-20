@@ -21,7 +21,16 @@ pub async fn get_message(
 
     let stream = repo::find_stream_by_message_id(db, req.message_id).await?;
 
-    Ok(get_message::Response { message, stream })
+    let messages_streams = match stream {
+        Some(ref stream) => repo::find_messages_by_stream_id(db, stream.id).await?,
+        None => vec![],
+    };
+
+    Ok(get_message::Response {
+        message,
+        stream,
+        messages_streams,
+    })
 }
 
 pub mod get_message {
@@ -35,6 +44,7 @@ pub mod get_message {
     pub struct Response {
         pub message: repo::message::Model,
         pub stream: Option<repo::stream::Model>,
+        pub messages_streams: Vec<repo::message_stream::Model>,
     }
 }
 
