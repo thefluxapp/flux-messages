@@ -11,6 +11,33 @@ use crate::app::{error::AppError, settings::AppSettings, AppJS};
 
 use super::repo;
 
+pub async fn get_message(
+    db: &DbConn,
+    req: get_message::Request,
+) -> Result<get_message::Response, Error> {
+    let message = repo::find_message_by_id(db, req.message_id)
+        .await?
+        .ok_or(AppError::NotFound)?;
+
+    let stream = repo::find_stream_by_message_id(db, req.message_id).await?;
+
+    Ok(get_message::Response { message, stream })
+}
+
+pub mod get_message {
+    use uuid::Uuid;
+
+    use crate::app::messages::repo;
+
+    pub struct Request {
+        pub message_id: Uuid,
+    }
+    pub struct Response {
+        pub message: repo::message::Model,
+        pub stream: Option<repo::stream::Model>,
+    }
+}
+
 pub async fn create_message(
     db: &DbConn,
     request: CreateMessageRequest,
