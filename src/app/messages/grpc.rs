@@ -94,35 +94,31 @@ mod get_message {
     impl From<Response> for GetMessageResponse {
         fn from(res: Response) -> Self {
             Self {
-                message: Some(res.message.into()),
-                stream: match res.stream {
-                    Some(stream) => Some(stream.into()),
-                    None => None,
-                },
-                message_ids: res
-                    .message_ids
-                    .iter()
-                    .map(|message_id| message_id.to_string())
+                message: Some(M(res.message.0, res.message.1).into()),
+                messages: res
+                    .messages
+                    .into_iter()
+                    .map(|message| M(message.0, message.1).into())
                     .collect(),
             }
         }
     }
 
-    impl From<message::Model> for Message {
-        fn from(message: message::Model) -> Self {
-            Self {
-                message_id: Some(message.id.into()),
-                user_id: Some(message.user_id.into()),
-                text: message.text.into(),
-            }
-        }
-    }
+    struct M(message::Model, Option<stream::Model>);
 
-    impl From<stream::Model> for Stream {
-        fn from(stream: stream::Model) -> Self {
+    impl From<M> for Message {
+        fn from(M(message, stream): M) -> Self {
             Self {
-                stream_id: Some(stream.id.into()),
-                text: stream.text,
+                message_id: Some(message.id.to_string()),
+                user_id: Some(message.user_id.to_string()),
+                text: Some(message.text),
+                stream: match stream {
+                    Some(stream) => Some(Stream {
+                        stream_id: Some(stream.id.to_string()),
+                        text: stream.text,
+                    }),
+                    None => None,
+                },
             }
         }
     }

@@ -20,21 +20,14 @@ pub async fn get_message(
         .ok_or(AppError::NotFound)?;
 
     let stream = repo::find_stream_by_message_id(db, req.message_id).await?;
+    let message = (message, None);
 
-    let message_ids = match stream {
-        Some(ref stream) => repo::find_messages_by_stream_id(db, stream.id)
-            .await?
-            .iter()
-            .map(|ms| ms.message_id)
-            .collect(),
-        None => vec![message.id],
+    let messages = match stream {
+        Some(stream) => repo::find_messages_by_stream_id(db, stream.id).await?,
+        None => vec![message.clone()],
     };
 
-    Ok(get_message::Response {
-        message,
-        stream,
-        message_ids,
-    })
+    Ok(get_message::Response { message, messages })
 }
 
 pub mod get_message {
@@ -46,10 +39,11 @@ pub mod get_message {
         pub message_id: Uuid,
     }
     pub struct Response {
-        pub message: repo::message::Model,
-        pub stream: Option<repo::stream::Model>,
-        pub message_ids: Vec<Uuid>,
+        pub message: (repo::message::Model, Option<repo::stream::Model>),
+        pub messages: Vec<(repo::message::Model, Option<repo::stream::Model>)>,
     }
+
+    // pub struct Message(repo::message::Model, Option<repo::stream::Model>);
 }
 
 pub async fn create_message(
