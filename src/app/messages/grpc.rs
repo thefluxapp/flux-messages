@@ -1,7 +1,6 @@
-use anyhow::Error;
 use flux_core_api::{
-    get_messages_response::Message, messages_service_server::MessagesService, CreateMessageRequest,
-    CreateMessageResponse, GetMessagesRequest, GetMessagesResponse,
+    messages_service_server::MessagesService, CreateMessageRequest, CreateMessageResponse,
+    GetMessageRequest, GetMessageResponse,
 };
 use tonic::{Request, Response, Status};
 use uuid::Uuid;
@@ -9,7 +8,10 @@ use validator::{Validate as _, ValidationErrors};
 
 use crate::app::{error::AppError, state::AppState};
 
-use super::{repo, service};
+use super::{
+    repo,
+    service::{self},
+};
 
 pub struct GrpcMessagesService {
     pub state: AppState,
@@ -32,13 +34,91 @@ impl MessagesService for GrpcMessagesService {
         Ok(Response::new(response.into()))
     }
 
-    async fn get_messages(
+    // async fn get_messages(
+    //     &self,
+    //     request: Request<GetMessagesRequest>,
+    // ) -> Result<Response<GetMessagesResponse>, Status> {
+    //     let response = get_messages(&self.state, request.into_inner()).await?;
+
+    //     Ok(Response::new(response.into()))
+    // }
+
+    async fn get_message(
         &self,
-        request: Request<GetMessagesRequest>,
-    ) -> Result<Response<GetMessagesResponse>, Status> {
-        let response = get_messages(&self.state, request.into_inner()).await?;
+        request: Request<GetMessageRequest>,
+    ) -> Result<Response<GetMessageResponse>, Status> {
+        let response = get_message(&self.state, request.into_inner()).await?;
 
         Ok(Response::new(response.into()))
+    }
+}
+
+async fn get_message(
+    state: &AppState,
+    request: GetMessageRequest,
+) -> Result<GetMessageResponse, AppError> {
+    let response = service::get_message(&state.db, request.try_into()?).await?;
+
+    Ok(response.into())
+}
+
+mod get_message {
+    use flux_core_api::{
+        get_message_response::{Message, Stream},
+        GetMessageRequest, GetMessageResponse,
+    };
+    use uuid::Uuid;
+    use validator::ValidationErrors;
+
+    use crate::app::{
+        error::AppError,
+        messages::{
+            repo::{message, stream},
+            service::get_message::{Request, Response},
+        },
+    };
+
+    impl TryFrom<GetMessageRequest> for Request {
+        type Error = AppError;
+
+        fn try_from(req: GetMessageRequest) -> Result<Self, Self::Error> {
+            Ok(Self {
+                message_id: Uuid::parse_str(req.message_id())
+                    .map_err(|_| AppError::Validation(ValidationErrors::new()))?,
+            })
+        }
+    }
+
+    impl From<Response> for GetMessageResponse {
+        fn from(res: Response) -> Self {
+            Self {
+                message: Some(M(res.message.0, res.message.1).into()),
+                messages: res
+                    .messages
+                    .into_iter()
+                    .map(|message| M(message.0, message.1).into())
+                    .collect(),
+            }
+        }
+    }
+
+    struct M(message::Model, Option<stream::Model>);
+
+    impl From<M> for Message {
+        fn from(M(message, stream): M) -> Self {
+            Self {
+                message_id: Some(message.id.to_string()),
+                user_id: Some(message.user_id.to_string()),
+                text: Some(message.text),
+                stream: match stream {
+                    Some(stream) => Some(Stream {
+                        stream_id: Some(stream.id.to_string()),
+                        text: stream.text,
+                    }),
+                    None => None,
+                },
+            }
+        }
     }
 }
 
@@ -93,46 +173,6 @@ impl Into<CreateMessageResponse> for service::CreateMessageResponse {
     fn into(self) -> CreateMessageResponse {
         CreateMessageResponse {
             message_id: Some(self.message.id.into()),
-        }
-    }
-}
-
-async fn get_messages(
-    state: &AppState,
-    request: GetMessagesRequest,
-) -> Result<service::GetMessagesResponse, AppError> {
-    let response = service::get_messages(&state.db, request.try_into()?).await?;
-
-    Ok(response)
-}
-
-impl TryFrom<GetMessagesRequest> for service::GetMessagesRequest {
-    type Error = AppError;
-
-    fn try_from(request: GetMessagesRequest) -> Result<Self, Self::Error> {
-        let data = Self {
-            message_ids: request
-                .message_ids
-                .iter()
-                .map(|message_id| -> Result<Uuid, Error> { Ok(Uuid::parse_str(message_id)?) })
-                .collect::<Result<Vec<Uuid>, Error>>()?,
-        };
-
-        Ok(data)
-    }
-}
-
-impl Into<GetMessagesResponse> for service::GetMessagesResponse {
-    fn into(self) -> GetMessagesResponse {
-        GetMessagesResponse {
-            messages: self
-                .messages
-                .iter()
-                .map(|message| Message {
-                    message_id: Some(message.id.into()),
-                    text: Some(message.text.clone()),
-                })
-                .collect(),
         }
     }
 }
