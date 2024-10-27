@@ -20,7 +20,12 @@ pub async fn get_message(
         .ok_or(AppError::NotFound)?;
 
     let stream = repo::find_stream_by_message_id(db, req.message_id).await?;
-    let message = (message, None);
+    let prev_stream = match stream {
+        Some(ref stream) => repo::find_prev_stream_by_message_id(db, message.id, stream.id).await?,
+        None => None,
+    };
+
+    let message = (message, prev_stream);
 
     let messages = match stream {
         Some(stream) => repo::find_messages_by_stream_id(db, stream.id).await?,
@@ -171,20 +176,4 @@ pub async fn summarize_stream_by_message_id(
     println!("SEND ASYNC");
 
     Ok(())
-}
-
-pub async fn get_messages(
-    db: &DbConn,
-    request: GetMessagesRequest,
-) -> Result<GetMessagesResponse, Error> {
-    let messages = repo::find_messages_by_ids(db, request.message_ids).await?;
-
-    Ok(GetMessagesResponse { messages })
-}
-
-pub struct GetMessagesRequest {
-    pub message_ids: Vec<Uuid>,
-}
-pub struct GetMessagesResponse {
-    pub messages: Vec<repo::message::Model>,
 }

@@ -1,7 +1,8 @@
 use anyhow::Error;
 use sea_orm::{
-    sea_query::OnConflict, ActiveModelTrait, ColumnTrait as _, ConnectionTrait, EntityTrait as _,
-    IntoActiveModel as _, JoinType, Order, QueryFilter as _, QueryOrder, QuerySelect,
+    sea_query::{IntoCondition, OnConflict},
+    ActiveModelTrait, ColumnTrait as _, ConnectionTrait, EntityTrait as _, IntoActiveModel as _,
+    JoinType, Order, QueryFilter as _, QueryOrder, QuerySelect,
 };
 use uuid::Uuid;
 
@@ -91,25 +92,33 @@ pub async fn find_streams_messages_by_stream_id<T: ConnectionTrait>(
     Ok(messages)
 }
 
-pub async fn find_messages_by_ids<T: ConnectionTrait>(
-    db: &T,
-    message_ids: Vec<Uuid>,
-) -> Result<Vec<message::Model>, Error> {
-    let messages = message::Entity::find()
-        .filter(message::Column::Id.is_in(message_ids))
-        .order_by(message::Column::Id, Order::Asc)
-        .all(db)
-        .await?;
-
-    Ok(messages)
-}
-
 pub async fn find_stream_by_message_id<T: ConnectionTrait>(
     db: &T,
+    message_id: Uuid,
+) -> Result<Option<stream::Model>, Error> {
+    let message = stream::Entity::find()
+        .filter(stream::Column::MessageId.eq(message_id))
+        .one(db)
+        .await?;
+
+    Ok(message)
+}
+
+pub async fn find_prev_stream_by_message_id<T: ConnectionTrait>(
+    db: &T,
+    message_id: Uuid,
     stream_id: Uuid,
 ) -> Result<Option<stream::Model>, Error> {
     let message = stream::Entity::find()
-        .filter(stream::Column::MessageId.eq(stream_id))
+        .filter(message_stream::Column::MessageId.eq(message_id))
+        .join(
+            JoinType::InnerJoin,
+            stream::Entity::belongs_to(message_stream::Entity)
+                .to(message_stream::Column::StreamId)
+                .from(stream::Column::Id)
+                .into(),
+        )
+        .filter(message_stream::Column::StreamId.ne(stream_id))
         .one(db)
         .await?;
 
@@ -135,6 +144,9 @@ pub async fn find_messages_by_stream_id<T: ConnectionTrait>(
             message_stream::Entity::belongs_to(stream::Entity)
                 .from(message_stream::Column::MessageId)
                 .to(stream::Column::MessageId)
+                .on_condition(move |_left, _right| {
+                    stream::Column::Id.ne(stream_id).into_condition()
+                })
                 .into(),
         )
         .order_by_asc(message_stream::Column::MessageId)

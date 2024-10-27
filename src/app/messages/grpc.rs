@@ -1,8 +1,6 @@
-use anyhow::Error;
 use flux_core_api::{
-    get_messages_response::Message, messages_service_server::MessagesService, CreateMessageRequest,
-    CreateMessageResponse, GetMessageRequest, GetMessageResponse, GetMessagesRequest,
-    GetMessagesResponse,
+    messages_service_server::MessagesService, CreateMessageRequest, CreateMessageResponse,
+    GetMessageRequest, GetMessageResponse,
 };
 use tonic::{Request, Response, Status};
 use uuid::Uuid;
@@ -36,14 +34,14 @@ impl MessagesService for GrpcMessagesService {
         Ok(Response::new(response.into()))
     }
 
-    async fn get_messages(
-        &self,
-        request: Request<GetMessagesRequest>,
-    ) -> Result<Response<GetMessagesResponse>, Status> {
-        let response = get_messages(&self.state, request.into_inner()).await?;
+    // async fn get_messages(
+    //     &self,
+    //     request: Request<GetMessagesRequest>,
+    // ) -> Result<Response<GetMessagesResponse>, Status> {
+    //     let response = get_messages(&self.state, request.into_inner()).await?;
 
-        Ok(Response::new(response.into()))
-    }
+    //     Ok(Response::new(response.into()))
+    // }
 
     async fn get_message(
         &self,
@@ -175,47 +173,6 @@ impl Into<CreateMessageResponse> for service::CreateMessageResponse {
     fn into(self) -> CreateMessageResponse {
         CreateMessageResponse {
             message_id: Some(self.message.id.into()),
-        }
-    }
-}
-
-async fn get_messages(
-    state: &AppState,
-    request: GetMessagesRequest,
-) -> Result<service::GetMessagesResponse, AppError> {
-    let response = service::get_messages(&state.db, request.try_into()?).await?;
-
-    Ok(response)
-}
-
-impl TryFrom<GetMessagesRequest> for service::GetMessagesRequest {
-    type Error = AppError;
-
-    fn try_from(request: GetMessagesRequest) -> Result<Self, Self::Error> {
-        let data = Self {
-            message_ids: request
-                .message_ids
-                .iter()
-                .map(|message_id| -> Result<Uuid, Error> { Ok(Uuid::parse_str(message_id)?) })
-                .collect::<Result<Vec<Uuid>, Error>>()?,
-        };
-
-        Ok(data)
-    }
-}
-
-impl Into<GetMessagesResponse> for service::GetMessagesResponse {
-    fn into(self) -> GetMessagesResponse {
-        GetMessagesResponse {
-            messages: self
-                .messages
-                .iter()
-                .map(|message| Message {
-                    message_id: Some(message.id.into()),
-                    user_id: Some(message.user_id.into()),
-                    text: Some(message.text.clone()),
-                })
-                .collect(),
         }
     }
 }
