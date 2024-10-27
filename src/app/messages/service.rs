@@ -1,13 +1,12 @@
+use crate::app::{error::AppError, settings::AppSettings, AppJS};
 use anyhow::Error;
 use bytes::BytesMut;
 use chrono::Utc;
+use create_message::{Request, Response};
 use flux_core_api::{summarize_stream_request::Message as StreamMessage, SummarizeStreamRequest};
 use prost::Message;
 use sea_orm::{DbConn, TransactionTrait as _};
 use uuid::Uuid;
-use validator::Validate;
-
-use crate::app::{error::AppError, settings::AppSettings, AppJS};
 
 use super::repo;
 
@@ -47,14 +46,9 @@ pub mod get_message {
         pub message: (repo::message::Model, Option<repo::stream::Model>),
         pub messages: Vec<(repo::message::Model, Option<repo::stream::Model>)>,
     }
-
-    // pub struct Message(repo::message::Model, Option<repo::stream::Model>);
 }
 
-pub async fn create_message(
-    db: &DbConn,
-    request: CreateMessageRequest,
-) -> Result<CreateMessageResponse, Error> {
+pub async fn create_message(db: &DbConn, request: Request) -> Result<Response, Error> {
     let txn = db.begin().await?;
 
     let message = repo::create_message(
@@ -133,18 +127,25 @@ pub async fn create_message(
 
     txn.commit().await?;
 
-    Ok(CreateMessageResponse { message, stream })
+    Ok(Response { message, stream })
 }
 
-#[derive(Validate)]
-pub struct CreateMessageRequest {
-    pub text: String,
-    pub user_id: Uuid,
-    pub message_id: Option<Uuid>,
-}
-pub struct CreateMessageResponse {
-    pub message: repo::message::Model,
-    pub stream: Option<repo::stream::Model>,
+pub mod create_message {
+    use uuid::Uuid;
+    use validator::Validate;
+
+    use crate::app::messages::repo::{message, stream};
+
+    #[derive(Validate)]
+    pub struct Request {
+        pub text: String,
+        pub user_id: Uuid,
+        pub message_id: Option<Uuid>,
+    }
+    pub struct Response {
+        pub message: message::Model,
+        pub stream: Option<stream::Model>,
+    }
 }
 
 pub async fn summarize_stream_by_message_id(
