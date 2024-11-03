@@ -1,9 +1,10 @@
 use flux_core_api::{
-    streams_service_server::StreamsService, GetStreamsRequest, GetStreamsResponse,
+    streams_service_server::StreamsService, GetLastStreamsRequest, GetLastStreamsResponse,
+    GetStreamsRequest, GetStreamsResponse,
 };
 use tonic::{Request, Response, Status};
 
-use super::{repo, service};
+use super::service;
 use crate::app::{error::AppError, state::AppState};
 
 pub struct GrpcStreamsService {
@@ -20,38 +21,105 @@ impl GrpcStreamsService {
 impl StreamsService for GrpcStreamsService {
     async fn get_streams(
         &self,
-        _: Request<GetStreamsRequest>,
+        req: Request<GetStreamsRequest>,
     ) -> Result<Response<GetStreamsResponse>, Status> {
-        let response = get_streams(&self.state).await?;
+        let response = get_streams(&self.state, req.into_inner()).await?;
+
+        Ok(Response::new(response))
+    }
+
+    async fn get_last_streams(
+        &self,
+        _: Request<GetLastStreamsRequest>,
+    ) -> Result<Response<GetLastStreamsResponse>, Status> {
+        let response = get_last_streams(&self.state).await?;
 
         Ok(Response::new(response))
     }
 }
 
-async fn get_streams(AppState { db, .. }: &AppState) -> Result<GetStreamsResponse, AppError> {
-    let response = service::get_streams(db).await?;
+async fn get_streams(
+    AppState { db, .. }: &AppState,
+    req: GetStreamsRequest,
+) -> Result<GetStreamsResponse, AppError> {
+    let res = service::get_streams(db, req.try_into()?).await?;
 
-    Ok(response.into())
+    Ok(res.into())
 }
 
-impl From<service::GetStreamsResponse> for GetStreamsResponse {
-    fn from(response: service::GetStreamsResponse) -> Self {
-        GetStreamsResponse {
-            streams: response
-                .streams
-                .into_iter()
-                .map(|stream| stream.into())
-                .collect(),
+mod get_streams {
+    use anyhow::Error;
+    use flux_core_api::{GetStreamsRequest, GetStreamsResponse};
+    use uuid::Uuid;
+
+    use crate::app::{
+        error::AppError,
+        streams::{
+            repo::{stream, stream_user},
+            service::get_streams::{Req, Res},
+        },
+    };
+
+    impl TryFrom<GetStreamsRequest> for Req {
+        type Error = AppError;
+
+        fn try_from(req: GetStreamsRequest) -> Result<Self, Self::Error> {
+            let data = Self {
+                stream_ids: req
+                    .stream_ids
+                    .iter()
+                    .map(|id| -> Result<Uuid, Error> { Ok(Uuid::parse_str(id)?) })
+                    .collect::<Result<Vec<Uuid>, Error>>()?,
+            };
+
+            Ok(data)
+        }
+    }
+
+    impl From<Res> for GetStreamsResponse {
+        fn from(response: Res) -> Self {
+            Self {
+                streams: response
+                    .streams
+                    .into_iter()
+                    .map(|(stream, streams_users)| U(stream, streams_users).into())
+                    .collect(),
+            }
+        }
+    }
+
+    struct U(stream::Model, Vec<stream_user::Model>);
+
+    impl From<U> for flux_core_api::get_streams_response::Stream {
+        fn from(U(stream, streams_users): U) -> Self {
+            Self {
+                stream_id: Some(stream.id.into()),
+                message_id: Some(stream.message_id.into()),
+                text: stream.text,
+                user_ids: streams_users.iter().map(|m| m.user_id.into()).collect(),
+            }
         }
     }
 }
 
-impl From<repo::stream::Model> for flux_core_api::get_streams_response::Stream {
-    fn from(stream: repo::stream::Model) -> Self {
-        Self {
-            stream_id: Some(stream.id.into()),
-            message_id: Some(stream.message_id.into()),
-            text: stream.text,
+async fn get_last_streams(
+    AppState { db, .. }: &AppState,
+) -> Result<GetLastStreamsResponse, AppError> {
+    let res = service::get_last_streams(db).await?;
+
+    Ok(res.into())
+}
+
+mod get_last_streams {
+    use flux_core_api::GetLastStreamsResponse;
+
+    use crate::app::streams::service::get_last_streams::Res;
+
+    impl From<Res> for GetLastStreamsResponse {
+        fn from(req: Res) -> Self {
+            Self {
+                stream_ids: req.stream_ids.into_iter().map(|m| m.into()).collect(),
+            }
         }
     }
 }

@@ -4,10 +4,42 @@ use summarize_stream::SummarizeStreamRequest;
 
 use super::repo;
 
-pub async fn get_streams(db: &DbConn) -> Result<GetStreamsResponse, Error> {
-    let streams = repo::find_streams(db).await?;
+pub async fn get_last_streams(db: &DbConn) -> Result<get_last_streams::Res, Error> {
+    let stream_ids = repo::find_last_streams(db)
+        .await?
+        .iter()
+        .map(|m| m.id)
+        .collect();
 
-    Ok(GetStreamsResponse { streams })
+    Ok(get_last_streams::Res { stream_ids })
+}
+
+pub mod get_last_streams {
+    use uuid::Uuid;
+
+    pub struct Res {
+        pub stream_ids: Vec<Uuid>,
+    }
+}
+
+pub async fn get_streams(db: &DbConn, req: get_streams::Req) -> Result<get_streams::Res, Error> {
+    let streams = repo::find_streams_with_streams_users(db, req.stream_ids).await?;
+
+    Ok(get_streams::Res { streams })
+}
+
+pub mod get_streams {
+    use uuid::Uuid;
+
+    use crate::app::streams::repo::{stream, stream_user};
+
+    pub struct Req {
+        pub stream_ids: Vec<Uuid>,
+    }
+
+    pub struct Res {
+        pub streams: Vec<(stream::Model, Vec<stream_user::Model>)>,
+    }
 }
 
 pub async fn summarize_stream(db: &DbConn, request: SummarizeStreamRequest) -> Result<(), Error> {
@@ -18,10 +50,6 @@ pub async fn summarize_stream(db: &DbConn, request: SummarizeStreamRequest) -> R
     txn.commit().await?;
 
     Ok(())
-}
-
-pub struct GetStreamsResponse {
-    pub streams: Vec<repo::stream::Model>,
 }
 
 pub mod summarize_stream {

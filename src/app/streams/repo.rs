@@ -1,20 +1,43 @@
 use anyhow::Error;
 use chrono::{DateTime, Utc};
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, ConnectionTrait, EntityTrait, QueryFilter, QueryOrder,
+    ActiveModelTrait, ColumnTrait, ConnectionTrait, EntityTrait, JoinType, QueryFilter, QueryOrder,
     QuerySelect, Set,
 };
 use uuid::Uuid;
 
 pub mod stream;
+pub mod stream_user;
 
-pub async fn find_streams<T: ConnectionTrait>(db: &T) -> Result<Vec<stream::Model>, Error> {
+pub async fn find_last_streams<T: ConnectionTrait>(db: &T) -> Result<Vec<stream::Model>, Error> {
     let streams = stream::Entity::find()
         .order_by_asc(stream::Column::Id)
         .all(db)
         .await?;
 
     Ok(streams)
+}
+
+pub async fn find_streams_with_streams_users<T: ConnectionTrait>(
+    db: &T,
+    stream_ids: Vec<Uuid>,
+) -> Result<Vec<(stream::Model, Vec<stream_user::Model>)>, Error> {
+    let streams_users = stream::Entity::find()
+        .select_with(stream_user::Entity)
+        .join(
+            JoinType::LeftJoin,
+            stream::Entity::belongs_to(stream_user::Entity)
+                .to(stream_user::Column::StreamId)
+                .from(stream::Column::Id)
+                .into(),
+        )
+        .filter(stream::Column::Id.is_in(stream_ids))
+        // TODO: save original order
+        // .order_by_asc(stream::Column::Id)
+        .all(db)
+        .await?;
+
+    Ok(streams_users)
 }
 
 pub async fn update_stream_text<T: ConnectionTrait>(
