@@ -28,11 +28,6 @@ message GetMessageResponse {
         optional string message_id = 1;
         optional string user_id = 2;
         optional string text = 3;
-        optional Stream stream = 4;
-    }
-
-    message Stream {
-        optional string stream_id = 1;
-        optional string text = 2;
+        optional string stream_id = 4;
     }
 }

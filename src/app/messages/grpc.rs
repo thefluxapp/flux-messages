@@ -52,10 +52,7 @@ async fn get_message(
 }
 
 mod get_message {
-    use flux_core_api::{
-        get_message_response::{Message, Stream},
-        GetMessageRequest, GetMessageResponse,
-    };
+    use flux_core_api::{get_message_response::Message, GetMessageRequest, GetMessageResponse};
     use uuid::Uuid;
     use validator::ValidationErrors;
 
@@ -99,11 +96,8 @@ mod get_message {
                 message_id: Some(message.id.to_string()),
                 user_id: Some(message.user_id.to_string()),
                 text: Some(message.text),
-                stream: match stream {
-                    Some(stream) => Some(Stream {
-                        stream_id: Some(stream.id.to_string()),
-                        text: stream.text,
-                    }),
+                stream_id: match stream {
+                    Some(stream) => Some(stream.id.to_string()),
                     None => None,
                 },
             }
