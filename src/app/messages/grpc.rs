@@ -3,8 +3,6 @@ use flux_core_api::{
     GetMessageRequest, GetMessageResponse,
 };
 use tonic::{Request, Response, Status};
-use uuid::Uuid;
-use validator::{Validate as _, ValidationErrors};
 
 use crate::app::{error::AppError, state::AppState};
 
@@ -34,15 +32,6 @@ impl MessagesService for GrpcMessagesService {
         Ok(Response::new(response.into()))
     }
 
-    // async fn get_messages(
-    //     &self,
-    //     request: Request<GetMessagesRequest>,
-    // ) -> Result<Response<GetMessagesResponse>, Status> {
-    //     let response = get_messages(&self.state, request.into_inner()).await?;
-
-    //     Ok(Response::new(response.into()))
-    // }
-
     async fn get_message(
         &self,
         request: Request<GetMessageRequest>,
@@ -56,17 +45,14 @@ impl MessagesService for GrpcMessagesService {
 async fn get_message(
     state: &AppState,
     request: GetMessageRequest,
-) -> Result<GetMessageResponse, AppError> {
+) -> Result<service::get_message::Response, AppError> {
     let response = service::get_message(&state.db, request.try_into()?).await?;
 
-    Ok(response.into())
+    Ok(response)
 }
 
 mod get_message {
-    use flux_core_api::{
-        get_message_response::{Message, Stream},
-        GetMessageRequest, GetMessageResponse,
-    };
+    use flux_core_api::{get_message_response::Message, GetMessageRequest, GetMessageResponse};
     use uuid::Uuid;
     use validator::ValidationErrors;
 
@@ -110,11 +96,8 @@ mod get_message {
                 message_id: Some(message.id.to_string()),
                 user_id: Some(message.user_id.to_string()),
                 text: Some(message.text),
-                stream: match stream {
-                    Some(stream) => Some(Stream {
-                        stream_id: Some(stream.id.to_string()),
-                        text: stream.text,
-                    }),
+                stream_id: match stream {
+                    Some(stream) => Some(stream.id.to_string()),
                     None => None,
                 },
             }
@@ -125,7 +108,7 @@ mod get_message {
 async fn create_message(
     state: &AppState,
     request: CreateMessageRequest,
-) -> Result<service::CreateMessageResponse, AppError> {
+) -> Result<service::create_message::Response, AppError> {
     let response = service::create_message(&state.db, request.try_into()?).await?;
 
     if let Some(ref stream) = response.stream {
@@ -147,32 +130,40 @@ async fn summarize_stream_by_message_id(
     Ok(())
 }
 
-impl TryFrom<CreateMessageRequest> for service::CreateMessageRequest {
-    type Error = AppError;
+mod create_message {
+    use flux_core_api::{CreateMessageRequest, CreateMessageResponse};
+    use uuid::Uuid;
+    use validator::{Validate as _, ValidationErrors};
 
-    fn try_from(request: CreateMessageRequest) -> Result<Self, Self::Error> {
-        let data = Self {
-            text: request.text().into(),
-            user_id: Uuid::parse_str(request.user_id())
-                .map_err(|_| AppError::Validation(ValidationErrors::new()))?,
-            message_id: match request.message_id {
-                Some(message_id) => Some(
-                    Uuid::parse_str(&message_id)
-                        .map_err(|_| AppError::Validation(ValidationErrors::new()))?,
-                ),
-                None => None,
-            },
-        };
-        data.validate()?;
+    use crate::app::{error::AppError, messages::service};
 
-        Ok(data)
+    impl TryFrom<CreateMessageRequest> for service::create_message::Request {
+        type Error = AppError;
+
+        fn try_from(request: CreateMessageRequest) -> Result<Self, Self::Error> {
+            let data = Self {
+                text: request.text().into(),
+                user_id: Uuid::parse_str(request.user_id())
+                    .map_err(|_| AppError::Validation(ValidationErrors::new()))?,
+                message_id: match request.message_id {
+                    Some(message_id) => Some(
+                        Uuid::parse_str(&message_id)
+                            .map_err(|_| AppError::Validation(ValidationErrors::new()))?,
+                    ),
+                    None => None,
+                },
+            };
+            data.validate()?;
+
+            Ok(data)
+        }
     }
-}
 
-impl Into<CreateMessageResponse> for service::CreateMessageResponse {
-    fn into(self) -> CreateMessageResponse {
-        CreateMessageResponse {
-            message_id: Some(self.message.id.into()),
+    impl From<service::create_message::Response> for CreateMessageResponse {
+        fn from(val: service::create_message::Response) -> Self {
+            Self {
+                message_id: Some(val.message.id.into()),
+            }
         }
     }
 }
