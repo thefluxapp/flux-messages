@@ -22,6 +22,30 @@ pub mod get_last_streams {
     }
 }
 
+pub async fn get_user_streams(
+    db: &DbConn,
+    req: get_user_streams::Req,
+) -> Result<get_user_streams::Res, Error> {
+    let stream_ids = repo::find_user_streams_with_streams_users(db, req.user_id)
+        .await?
+        .iter()
+        .map(|m| m.id)
+        .collect();
+
+    Ok(get_user_streams::Res { stream_ids })
+}
+
+pub mod get_user_streams {
+    use uuid::Uuid;
+
+    pub struct Req {
+        pub user_id: Uuid,
+    }
+    pub struct Res {
+        pub stream_ids: Vec<Uuid>,
+    }
+}
+
 pub async fn get_streams(db: &DbConn, req: get_streams::Req) -> Result<get_streams::Res, Error> {
     let streams = repo::find_streams_with_streams_users(db, req.stream_ids).await?;
 

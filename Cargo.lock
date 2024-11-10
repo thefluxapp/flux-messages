@@ -963,6 +963,7 @@ dependencies = [
  "config",
  "flux-core-api",
  "futures-lite",
+ "itertools 0.13.0",
  "prost",
  "sea-orm",
  "serde",

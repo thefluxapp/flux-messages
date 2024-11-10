@@ -18,6 +18,26 @@ pub async fn find_last_streams<T: ConnectionTrait>(db: &T) -> Result<Vec<stream:
     Ok(streams)
 }
 
+pub async fn find_user_streams_with_streams_users<T: ConnectionTrait>(
+    db: &T,
+    user_id: Uuid,
+) -> Result<Vec<stream::Model>, Error> {
+    let streams = stream::Entity::find()
+        .join(
+            JoinType::LeftJoin,
+            stream::Entity::belongs_to(stream_user::Entity)
+                .to(stream_user::Column::StreamId)
+                .from(stream::Column::Id)
+                .into(),
+        )
+        .filter(stream_user::Column::UserId.eq(user_id))
+        .order_by_asc(stream::Column::Id)
+        .all(db)
+        .await?;
+
+    Ok(streams)
+}
+
 pub async fn find_streams_with_streams_users<T: ConnectionTrait>(
     db: &T,
     stream_ids: Vec<Uuid>,

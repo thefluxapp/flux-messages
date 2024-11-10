@@ -1,6 +1,6 @@
 use flux_core_api::{
     streams_service_server::StreamsService, GetLastStreamsRequest, GetLastStreamsResponse,
-    GetStreamsRequest, GetStreamsResponse,
+    GetStreamsRequest, GetStreamsResponse, GetUserStreamsRequest, GetUserStreamsResponse,
 };
 use tonic::{Request, Response, Status};
 
@@ -33,6 +33,15 @@ impl StreamsService for GrpcStreamsService {
         _: Request<GetLastStreamsRequest>,
     ) -> Result<Response<GetLastStreamsResponse>, Status> {
         let response = get_last_streams(&self.state).await?;
+
+        Ok(Response::new(response))
+    }
+
+    async fn get_user_streams(
+        &self,
+        req: Request<GetUserStreamsRequest>,
+    ) -> Result<Response<GetUserStreamsResponse>, Status> {
+        let response = get_user_streams(&self.state, req.into_inner()).await?;
 
         Ok(Response::new(response))
     }
@@ -112,13 +121,53 @@ async fn get_last_streams(
 
 mod get_last_streams {
     use flux_core_api::GetLastStreamsResponse;
+    use itertools::Itertools as _;
 
     use crate::app::streams::service::get_last_streams::Res;
 
     impl From<Res> for GetLastStreamsResponse {
         fn from(req: Res) -> Self {
             Self {
-                stream_ids: req.stream_ids.into_iter().map(|m| m.into()).collect(),
+                stream_ids: req.stream_ids.into_iter().map_into().collect(),
+            }
+        }
+    }
+}
+
+async fn get_user_streams(
+    AppState { db, .. }: &AppState,
+    req: GetUserStreamsRequest,
+) -> Result<GetUserStreamsResponse, AppError> {
+    let res = service::get_user_streams(db, req.try_into()?).await?;
+
+    Ok(res.into())
+}
+
+mod get_user_streams {
+    use flux_core_api::{GetUserStreamsRequest, GetUserStreamsResponse};
+    use itertools::Itertools;
+
+    use crate::app::{
+        error::AppError,
+        streams::service::get_user_streams::{Req, Res},
+    };
+
+    impl TryFrom<GetUserStreamsRequest> for Req {
+        type Error = AppError;
+
+        fn try_from(req: GetUserStreamsRequest) -> Result<Self, Self::Error> {
+            let data = Self {
+                user_id: req.user_id().try_into()?,
+            };
+
+            Ok(data)
+        }
+    }
+
+    impl From<Res> for GetUserStreamsResponse {
+        fn from(res: Res) -> Self {
+            Self {
+                stream_ids: res.stream_ids.into_iter().map_into().collect(),
             }
         }
     }
