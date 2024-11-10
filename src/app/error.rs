@@ -1,6 +1,7 @@
 use axum::body::Bytes;
 use thiserror::Error;
 use tonic::{metadata::MetadataMap, Code, Status};
+use validator::ValidationErrors;
 
 impl From<AppError> for Status {
     fn from(error: AppError) -> Self {
@@ -14,6 +15,12 @@ impl From<AppError> for Status {
             AppError::Other(error) => Self::internal(error.to_string()),
             AppError::NotFound => Self::not_found("entity not found"),
         }
+    }
+}
+
+impl From<uuid::Error> for AppError {
+    fn from(_: uuid::Error) -> Self {
+        AppError::Validation(ValidationErrors::new())
     }
 }
 

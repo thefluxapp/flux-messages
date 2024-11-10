@@ -3,12 +3,21 @@ package flux.streams;
 
 service StreamsService {
     rpc GetLastStreams(GetLastStreamsRequest) returns (GetLastStreamsResponse);
+    rpc GetUserStreams(GetUserStreamsRequest) returns (GetUserStreamsResponse);
     rpc GetStreams(GetStreamsRequest) returns (GetStreamsResponse);
 }
 
 message GetLastStreamsRequest {}
 
 message GetLastStreamsResponse {
+    repeated string stream_ids = 1;
+}
+
+message GetUserStreamsRequest {
+    optional string user_id = 1;
+}
+
+message GetUserStreamsResponse {
     repeated string stream_ids = 1;
 }
 
