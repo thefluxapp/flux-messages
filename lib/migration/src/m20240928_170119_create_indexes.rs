@@ -34,6 +34,16 @@ impl MigrationTrait for Migration {
         manager
             .create_index(
                 Index::create()
+                    .name("streams_is_main_idx")
+                    .table(Streams::Table)
+                    .col(Streams::IsMain)
+                    .to_owned(),
+            )
+            .await?;
+
+        manager
+            .create_index(
+                Index::create()
                     .name("messages_streams_message_id_idx")
                     .table(MessagesStreams::Table)
                     .col(MessagesStreams::MessageId)
@@ -61,6 +71,10 @@ impl MigrationTrait for Migration {
 
         manager
             .drop_index(Index::drop().name("streams_id_idx").to_owned())
+            .await?;
+
+        manager
+            .drop_index(Index::drop().name("streams_is_main_idx").to_owned())
             .await?;
 
         manager

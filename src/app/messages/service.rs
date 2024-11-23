@@ -19,12 +19,14 @@ pub async fn get_message(
         .ok_or(AppError::NotFound)?;
 
     let stream = repo::find_stream_by_message_id(db, req.message_id).await?;
-    let prev_stream = match stream {
-        Some(ref stream) => repo::find_prev_stream_by_message_id(db, message.id, stream.id).await?,
+    let parent_stream = match stream {
+        Some(ref stream) => {
+            repo::find_parent_stream_by_message_id(db, message.id, stream.id).await?
+        }
         None => None,
     };
 
-    let message = (message, prev_stream);
+    let message = (message, parent_stream);
 
     let messages = match stream {
         Some(stream) => repo::find_messages_by_stream_id(db, stream.id).await?,
@@ -65,9 +67,14 @@ pub async fn create_message(db: &DbConn, request: Request) -> Result<Response, E
 
     let stream = match request.message_id {
         Some(message_id) => {
-            repo::find_message_by_id(&txn, message_id)
+            let parent_message = repo::find_message_by_id(&txn, message_id)
                 .await?
                 .ok_or(AppError::NotFound)?;
+
+            let is_main = match repo::find_message_stream_by_message_id(&txn, message_id).await? {
+                Some(_) => false,
+                None => true,
+            };
 
             let stream = repo::create_stream(
                 &txn,
@@ -76,7 +83,7 @@ pub async fn create_message(db: &DbConn, request: Request) -> Result<Response, E
                     title: None,
                     text: None,
                     message_id,
-                    is_main: false,
+                    is_main,
                     created_at: Utc::now().naive_utc(),
                     updated_at: Utc::now().naive_utc(),
                 },
@@ -114,6 +121,18 @@ pub async fn create_message(db: &DbConn, request: Request) -> Result<Response, E
                     id: Uuid::now_v7(),
                     stream_id: stream.id,
                     user_id: request.user_id,
+                    created_at: Utc::now().naive_utc(),
+                    updated_at: Utc::now().naive_utc(),
+                },
+            )
+            .await?;
+
+            repo::create_stream_user(
+                &txn,
+                repo::stream_user::Model {
+                    id: Uuid::now_v7(),
+                    stream_id: stream.id,
+                    user_id: parent_message.user_id,
                     created_at: Utc::now().naive_utc(),
                     updated_at: Utc::now().naive_utc(),
                 },
