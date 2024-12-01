@@ -3,12 +3,14 @@ use anyhow::Error;
 use bytes::BytesMut;
 use chrono::Utc;
 use create_message::{Request, Response};
-use flux_core_api::{summarize_stream_request::Message as StreamMessage, SummarizeStreamRequest};
+use flux_core_api::{
+    summarize_stream_request::Message as StreamMessage, NotifyMessage, SummarizeStreamRequest,
+};
 use prost::Message;
 use sea_orm::{DbConn, TransactionTrait as _};
 use uuid::Uuid;
 
-use super::repo;
+use super::{repo, settings::MessagingSettings};
 
 pub async fn get_message(
     db: &DbConn,
@@ -59,6 +61,7 @@ pub async fn create_message(db: &DbConn, request: Request) -> Result<Response, E
             id: Uuid::now_v7(),
             text: request.text.clone(),
             user_id: request.user_id,
+            code: request.code,
             created_at: Utc::now().naive_utc(),
             updated_at: Utc::now().naive_utc(),
         },
@@ -160,10 +163,49 @@ pub mod create_message {
         pub text: String,
         pub user_id: Uuid,
         pub message_id: Option<Uuid>,
+        pub code: String,
     }
+
     pub struct Response {
         pub message: message::Model,
         pub stream: Option<stream::Model>,
+    }
+}
+
+pub async fn notify_message(
+    db: &DbConn,
+    js: &AppJS,
+    settings: MessagingSettings,
+    notify_message::Req { message }: notify_message::Req,
+) -> Result<(), Error> {
+    let mut buf = BytesMut::new();
+    Into::<NotifyMessage>::into(message).encode(&mut buf)?;
+
+    js.publish(settings.message.subject, buf.into()).await?;
+
+    Ok(())
+}
+
+pub mod notify_message {
+    use flux_core_api::{notify_message::Message, NotifyMessage};
+
+    use crate::app::messages::repo;
+
+    pub struct Req {
+        pub message: repo::message::Model,
+    }
+
+    impl From<repo::message::Model> for NotifyMessage {
+        fn from(message: repo::message::Model) -> Self {
+            Self {
+                message: Some(Message {
+                    message_id: Some(message.id.into()),
+                    user_id: Some(message.id.into()),
+                    text: Some(message.text),
+                    code: Some(message.code),
+                }),
+            }
+        }
     }
 }
 
