@@ -51,6 +51,7 @@ async fn get_message(
 
 mod get_message {
     use flux_core_api::{get_message_response::Message, GetMessageRequest, GetMessageResponse};
+    use prost_types::Timestamp;
     use uuid::Uuid;
     use validator::ValidationErrors;
 
@@ -99,6 +100,11 @@ mod get_message {
                     Some(stream) => Some(stream.id.to_string()),
                     None => None,
                 },
+                order: Some(message.created_at.and_utc().timestamp_micros()),
+                created_at: Some(Timestamp {
+                    seconds: message.created_at.and_utc().timestamp(),
+                    nanos: 0,
+                }),
             }
         }
     }

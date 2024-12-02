@@ -1,6 +1,8 @@
 syntax = "proto3";
 package flux.messages;
 
+import "google/protobuf/timestamp.proto";
+
 service MessagesService {
     rpc CreateMessage(CreateMessageRequest) returns (CreateMessageResponse);
     rpc GetMessage(GetMessageRequest) returns (GetMessageResponse);
@@ -31,6 +33,8 @@ message GetMessageResponse {
         optional string text = 3;
         optional string stream_id = 4;
         optional string code = 5;
+        optional int64 order = 6;
+        optional google.protobuf.Timestamp created_at = 7;
     }
 }
 
@@ -42,6 +46,8 @@ message NotifyMessage {
         optional string user_id = 2;
         optional string text = 3;
         optional string code = 4;
+        optional int64 order = 5;
+        optional google.protobuf.Timestamp created_at = 6;
         // optional string stream_id = 4;
     }
 }

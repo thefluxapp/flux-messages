@@ -965,6 +965,7 @@ dependencies = [
  "futures-lite",
  "itertools 0.13.0",
  "prost",
+ "prost-types",
  "sea-orm",
  "serde",
  "serde_json",
@@ -982,6 +983,7 @@ name = "flux-core-api"
 version = "0.1.0"
 dependencies = [
  "prost",
+ "prost-types",
  "tonic",
  "tonic-build",
 ]

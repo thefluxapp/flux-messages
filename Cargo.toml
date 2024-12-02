@@ -38,3 +38,4 @@ sea-orm = { version = "1.1.0", features = [
 
 serde = { version = "1.0.210", features = ["derive"] }
 serde_json = "1.0.128"
+prost-types = "0.13.3"

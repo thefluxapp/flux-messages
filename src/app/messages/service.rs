@@ -188,6 +188,7 @@ pub async fn notify_message(
 
 pub mod notify_message {
     use flux_core_api::{notify_message::Message, NotifyMessage};
+    use prost_types::Timestamp;
 
     use crate::app::messages::repo;
 
@@ -203,6 +204,11 @@ pub mod notify_message {
                     user_id: Some(message.id.into()),
                     text: Some(message.text),
                     code: Some(message.code),
+                    order: Some(message.created_at.and_utc().timestamp_micros()),
+                    created_at: Some(Timestamp {
+                        seconds: message.created_at.and_utc().timestamp(),
+                        nanos: 0,
+                    }),
                 }),
             }
         }
