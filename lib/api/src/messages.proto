@@ -25,7 +25,7 @@ message GetMessageRequest {
 
 message GetMessageResponse {
     optional Message message = 1;
-    repeated Message messages = 3;
+    repeated Message messages = 2;
 
     message Message {
         optional string message_id = 1;
