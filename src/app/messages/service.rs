@@ -3,9 +3,7 @@ use anyhow::Error;
 use bytes::BytesMut;
 use chrono::Utc;
 use create_message::{Request, Response};
-use flux_core_api::{
-    summarize_stream_request::Message as StreamMessage, NotifyMessage, SummarizeStreamRequest,
-};
+use flux_core_api::{summarize_stream_request::Message as StreamMessage, SummarizeStreamRequest};
 use prost::Message;
 use sea_orm::{DbConn, TransactionTrait as _};
 use uuid::Uuid;
@@ -173,13 +171,13 @@ pub mod create_message {
 }
 
 pub async fn notify_message(
-    db: &DbConn,
+    // db: &DbConn,
     js: &AppJS,
     settings: MessagingSettings,
-    notify_message::Req { message }: notify_message::Req,
+    req: notify_message::Req,
 ) -> Result<(), Error> {
     let mut buf = BytesMut::new();
-    Into::<NotifyMessage>::into(message).encode(&mut buf)?;
+    Into::<flux_core_api::Message>::into(req).encode(&mut buf)?;
 
     js.publish(settings.message.subject, buf.into()).await?;
 
@@ -187,17 +185,18 @@ pub async fn notify_message(
 }
 
 pub mod notify_message {
-    use flux_core_api::{notify_message::Message, NotifyMessage};
+    use flux_core_api::message::{Message, Stream};
     use prost_types::Timestamp;
 
     use crate::app::messages::repo;
 
     pub struct Req {
         pub message: repo::message::Model,
+        pub stream: Option<repo::stream::Model>,
     }
 
-    impl From<repo::message::Model> for NotifyMessage {
-        fn from(message: repo::message::Model) -> Self {
+    impl From<Req> for flux_core_api::Message {
+        fn from(Req { message, stream }: Req) -> Self {
             Self {
                 message: Some(Message {
                     message_id: Some(message.id.into()),
@@ -209,7 +208,18 @@ pub mod notify_message {
                         seconds: message.created_at.and_utc().timestamp(),
                         nanos: 0,
                     }),
+                    updated_at: Some(Timestamp {
+                        seconds: message.updated_at.and_utc().timestamp(),
+                        nanos: 0,
+                    }),
                 }),
+                stream: match stream {
+                    Some(stream) => Some(Stream {
+                        stream_id: Some(stream.id.into()),
+                        message_id: Some(stream.message_id.into()),
+                    }),
+                    None => None,
+                },
             }
         }
     }
@@ -240,8 +250,6 @@ pub async fn summarize_stream_by_message_id(
 
     js.publish(settings.streams.messaging.subjects.request, buf.into())
         .await?;
-
-    println!("SEND ASYNC");
 
     Ok(())
 }

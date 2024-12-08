@@ -37,17 +37,3 @@ message GetMessageResponse {
         optional google.protobuf.Timestamp created_at = 7;
     }
 }
-
-message NotifyMessage {
-    optional Message message = 1;
-
-    message Message {
-        optional string message_id = 1;
-        optional string user_id = 2;
-        optional string text = 3;
-        optional string code = 4;
-        optional int64 order = 5;
-        optional google.protobuf.Timestamp created_at = 6;
-        // optional string stream_id = 4;
-    }
-}

@@ -127,6 +127,7 @@ async fn create_message(
         state.clone(),
         service::notify_message::Req {
             message: response.message.clone(),
+            stream: response.stream.clone(),
         },
     ));
 
@@ -173,12 +174,10 @@ mod create_message {
 }
 
 async fn notify_message(
-    AppState {
-        db, js, settings, ..
-    }: AppState,
+    AppState { js, settings, .. }: AppState,
     req: service::notify_message::Req,
 ) -> Result<(), Error> {
-    service::notify_message(&db, &js, settings.messages.messaging, req).await?;
+    service::notify_message(&js, settings.messages.messaging, req).await?;
 
     Ok(())
 }
