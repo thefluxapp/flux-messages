@@ -200,7 +200,7 @@ pub mod notify_message {
             Self {
                 message: Some(Message {
                     message_id: Some(message.id.into()),
-                    user_id: Some(message.id.into()),
+                    user_id: Some(message.user_id.into()),
                     text: Some(message.text),
                     code: Some(message.code),
                     order: Some(message.created_at.and_utc().timestamp_micros()),
