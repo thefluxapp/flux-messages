@@ -81,8 +81,7 @@ pub async fn create_message(db: &DbConn, request: Request) -> Result<Response, E
                 &txn,
                 repo::stream::Model {
                     id: Uuid::now_v7(),
-                    title: None,
-                    text: None,
+                    text: parent_message.text.clone(),
                     message_id,
                     is_main,
                     created_at: Utc::now().naive_utc(),

@@ -74,7 +74,7 @@ pub async fn update_stream_text<T: ConnectionTrait>(
         .await?
     {
         let mut stream: stream::ActiveModel = stream.into();
-        stream.text = Set(Some(text));
+        stream.text = Set(text);
         stream.update(db).await?;
     };
 

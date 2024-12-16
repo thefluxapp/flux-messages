@@ -105,7 +105,7 @@ mod get_streams {
             Self {
                 stream_id: Some(stream.id.into()),
                 message_id: Some(stream.message_id.into()),
-                text: stream.text,
+                text: Some(stream.text),
                 user_ids: streams_users.iter().map(|m| m.user_id.into()).collect(),
             }
         }
