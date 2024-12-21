@@ -25,8 +25,8 @@ pub async fn run() -> Result<(), Error> {
 async fn http_and_grpc(state: &AppState) -> Result<(), Error> {
     let reflection_service = tonic_reflection::server::Builder::configure()
         .register_encoded_file_descriptor_set(tonic_health::pb::FILE_DESCRIPTOR_SET)
-        .register_encoded_file_descriptor_set(flux_core_api::MESSAGES_FILE_DESCRIPTOR_SET)
-        .register_encoded_file_descriptor_set(flux_core_api::STREAMS_FILE_DESCRIPTOR_SET)
+        .register_encoded_file_descriptor_set(flux_messages_api::MESSAGES_FILE_DESCRIPTOR_SET)
+        .register_encoded_file_descriptor_set(flux_messages_api::STREAMS_FILE_DESCRIPTOR_SET)
         .build_v1alpha()?;
 
     let (_, health_service) = tonic_health::server::health_reporter();

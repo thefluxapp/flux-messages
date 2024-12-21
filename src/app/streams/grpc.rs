@@ -1,4 +1,4 @@
-use flux_core_api::{
+use flux_messages_api::{
     streams_service_server::StreamsService, GetLastStreamsRequest, GetLastStreamsResponse,
     GetStreamsRequest, GetStreamsResponse, GetUserStreamsRequest, GetUserStreamsResponse,
 };
@@ -58,7 +58,7 @@ async fn get_streams(
 
 mod get_streams {
     use anyhow::Error;
-    use flux_core_api::{GetStreamsRequest, GetStreamsResponse};
+    use flux_messages_api::{GetStreamsRequest, GetStreamsResponse};
     use uuid::Uuid;
 
     use crate::app::{
@@ -100,7 +100,7 @@ mod get_streams {
 
     struct U(stream::Model, Vec<stream_user::Model>);
 
-    impl From<U> for flux_core_api::get_streams_response::Stream {
+    impl From<U> for flux_messages_api::get_streams_response::Stream {
         fn from(U(stream, streams_users): U) -> Self {
             Self {
                 stream_id: Some(stream.id.into()),
@@ -121,7 +121,7 @@ async fn get_last_streams(
 }
 
 mod get_last_streams {
-    use flux_core_api::GetLastStreamsResponse;
+    use flux_messages_api::GetLastStreamsResponse;
     use itertools::Itertools as _;
 
     use crate::app::streams::service::get_last_streams::Res;
@@ -145,7 +145,7 @@ async fn get_user_streams(
 }
 
 mod get_user_streams {
-    use flux_core_api::{GetUserStreamsRequest, GetUserStreamsResponse};
+    use flux_messages_api::{GetUserStreamsRequest, GetUserStreamsResponse};
     use itertools::Itertools;
 
     use crate::app::{

@@ -1,5 +1,5 @@
 use anyhow::Error;
-use flux_core_api::{
+use flux_messages_api::{
     messages_service_server::MessagesService, CreateMessageRequest, CreateMessageResponse,
     GetMessageRequest, GetMessageResponse,
 };
@@ -50,7 +50,7 @@ async fn get_message(
 }
 
 mod get_message {
-    use flux_core_api::{get_message_response::Message, GetMessageRequest, GetMessageResponse};
+    use flux_messages_api::{get_message_response::Message, GetMessageRequest, GetMessageResponse};
     use prost_types::Timestamp;
     use uuid::Uuid;
     use validator::ValidationErrors;
@@ -135,7 +135,7 @@ async fn create_message(
 }
 
 mod create_message {
-    use flux_core_api::{CreateMessageRequest, CreateMessageResponse};
+    use flux_messages_api::{CreateMessageRequest, CreateMessageResponse};
     use uuid::Uuid;
     use validator::{Validate as _, ValidationErrors};
 
