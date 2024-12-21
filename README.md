@@ -1,2 +1,2 @@
-# flux-core
+# flux-messages
 

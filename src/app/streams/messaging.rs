@@ -1,7 +1,7 @@
 use anyhow::Error;
 use async_nats::jetstream::consumer::PullConsumer;
 use chrono::DateTime;
-use flux_core_api::SummarizeStreamResponse;
+use flux_messages_api::SummarizeStreamResponse;
 use futures_lite::StreamExt as _;
 use prost::Message;
 use uuid::Uuid;

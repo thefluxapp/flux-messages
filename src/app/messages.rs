@@ -1,4 +1,4 @@
-use flux_core_api::messages_service_server::MessagesServiceServer;
+use flux_messages_api::messages_service_server::MessagesServiceServer;
 use grpc::GrpcMessagesService;
 
 use super::state::AppState;

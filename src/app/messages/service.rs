@@ -3,7 +3,9 @@ use anyhow::Error;
 use bytes::BytesMut;
 use chrono::Utc;
 use create_message::{Request, Response};
-use flux_core_api::{summarize_stream_request::Message as StreamMessage, SummarizeStreamRequest};
+use flux_messages_api::{
+    summarize_stream_request::Message as StreamMessage, SummarizeStreamRequest,
+};
 use prost::Message;
 use sea_orm::{DbConn, TransactionTrait as _};
 use uuid::Uuid;
@@ -176,7 +178,7 @@ pub async fn notify_message(
     req: notify_message::Req,
 ) -> Result<(), Error> {
     let mut buf = BytesMut::new();
-    Into::<flux_core_api::Message>::into(req).encode(&mut buf)?;
+    Into::<flux_messages_api::Message>::into(req).encode(&mut buf)?;
 
     js.publish(settings.message.subject, buf.into()).await?;
 
@@ -184,7 +186,7 @@ pub async fn notify_message(
 }
 
 pub mod notify_message {
-    use flux_core_api::message::{Message, Stream};
+    use flux_messages_api::message::{Message, Stream};
     use prost_types::Timestamp;
 
     use crate::app::messages::repo;
@@ -194,7 +196,7 @@ pub mod notify_message {
         pub stream: Option<repo::stream::Model>,
     }
 
-    impl From<Req> for flux_core_api::Message {
+    impl From<Req> for flux_messages_api::Message {
         fn from(Req { message, stream }: Req) -> Self {
             Self {
                 message: Some(Message {

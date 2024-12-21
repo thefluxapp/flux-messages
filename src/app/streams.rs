@@ -1,6 +1,6 @@
 use anyhow::Error;
 use async_nats::jetstream::consumer::pull::Config;
-use flux_core_api::streams_service_server::StreamsServiceServer;
+use flux_messages_api::streams_service_server::StreamsServiceServer;
 use grpc::GrpcStreamsService;
 
 use super::state::AppState;
