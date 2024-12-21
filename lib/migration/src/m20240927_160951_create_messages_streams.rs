@@ -28,17 +28,6 @@ impl MigrationTrait for Migration {
             )
             .await?;
 
-        manager
-            .create_index(
-                Index::create()
-                    .name("messages_streams_message_id_udx")
-                    .unique()
-                    .table(MessagesStreams::Table)
-                    .col(MessagesStreams::MessageId)
-                    .to_owned(),
-            )
-            .await?;
-
         Ok(())
     }
 
