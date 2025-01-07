@@ -21,6 +21,7 @@ message CreateMessageResponse {
 
 message GetMessageRequest {
     optional string message_id = 1;
+    optional string cursor_message_id = 2;
 }
 
 message GetMessageResponse {

@@ -41,10 +41,10 @@ impl MessagesService for GrpcMessagesService {
 }
 
 async fn get_message(
-    state: &AppState,
+    AppState { db, settings, .. }: &AppState,
     request: GetMessageRequest,
 ) -> Result<service::get_message::Response, AppError> {
-    let response = service::get_message(&state.db, request.try_into()?).await?;
+    let response = service::get_message(&db, &settings.messages, request.try_into()?).await?;
 
     Ok(response)
 }
@@ -53,7 +53,6 @@ mod get_message {
     use flux_messages_api::{get_message_response::Message, GetMessageRequest, GetMessageResponse};
     use prost_types::Timestamp;
     use uuid::Uuid;
-    use validator::ValidationErrors;
 
     use crate::app::{
         error::AppError,
@@ -68,8 +67,12 @@ mod get_message {
 
         fn try_from(req: GetMessageRequest) -> Result<Self, Self::Error> {
             Ok(Self {
-                message_id: Uuid::parse_str(req.message_id())
-                    .map_err(|_| AppError::Validation(ValidationErrors::new()))?,
+                message_id: Uuid::parse_str(req.message_id())?,
+                cursor_message_id: if let Some(cursor_message_id) = req.cursor_message_id {
+                    Some(Uuid::parse_str(&cursor_message_id)?)
+                } else {
+                    None
+                },
             })
         }
     }

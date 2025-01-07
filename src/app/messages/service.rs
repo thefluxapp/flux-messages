@@ -10,10 +10,14 @@ use prost::Message;
 use sea_orm::{DbConn, TransactionTrait as _};
 use uuid::Uuid;
 
-use super::{repo, settings::MessagingSettings};
+use super::{
+    repo,
+    settings::{MessagesSettings, MessagingSettings},
+};
 
 pub async fn get_message(
     db: &DbConn,
+    settings: &MessagesSettings,
     req: get_message::Request,
 ) -> Result<get_message::Response, Error> {
     let message = repo::find_message_by_id(db, req.message_id)
@@ -31,7 +35,10 @@ pub async fn get_message(
     let message = (message, parent_stream);
 
     let messages = match stream {
-        Some(stream) => repo::find_messages_by_stream_id(db, stream.id).await?,
+        Some(stream) => {
+            repo::find_messages_by_stream_id(db, stream.id, req.cursor_message_id, settings.limit)
+                .await?
+        }
         None => vec![message.clone()],
     };
 
@@ -45,6 +52,7 @@ pub mod get_message {
 
     pub struct Request {
         pub message_id: Uuid,
+        pub cursor_message_id: Option<Uuid>,
     }
     pub struct Response {
         pub message: (repo::message::Model, Option<repo::stream::Model>),

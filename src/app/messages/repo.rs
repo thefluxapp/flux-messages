@@ -2,7 +2,7 @@ use anyhow::Error;
 use sea_orm::{
     sea_query::{IntoCondition, OnConflict},
     ActiveModelTrait, ColumnTrait as _, ConnectionTrait, EntityTrait as _, IntoActiveModel as _,
-    JoinType, Order, QueryFilter as _, QueryOrder, QuerySelect,
+    JoinType, Order, QueryFilter as _, QueryOrder, QuerySelect, QueryTrait as _,
 };
 use uuid::Uuid;
 
@@ -138,6 +138,8 @@ pub async fn find_parent_stream_by_message_id<T: ConnectionTrait>(
 pub async fn find_messages_by_stream_id<T: ConnectionTrait>(
     db: &T,
     stream_id: Uuid,
+    cursor_message_id: Option<Uuid>,
+    limit: u64,
 ) -> Result<Vec<(message::Model, Option<stream::Model>)>, Error> {
     Ok(message::Entity::find()
         .select_also(stream::Entity)
@@ -159,7 +161,11 @@ pub async fn find_messages_by_stream_id<T: ConnectionTrait>(
                 })
                 .into(),
         )
-        .order_by_asc(message_stream::Column::MessageId)
+        .apply_if(cursor_message_id, |query, v| {
+            query.filter(message::Column::Id.lt(v))
+        })
+        .cursor_by(message::Column::Id)
+        .last(limit)
         .all(db)
         .await?)
 }

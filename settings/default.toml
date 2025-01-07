@@ -17,5 +17,8 @@ consumer = "flux-messages"
 request = "flux.streams.summarize.request"
 response = "flux.streams.summarize.response"
 
+[messages]
+limit = 5
+
 [messages.messaging.message]
 subject = "flux.messages.message"
