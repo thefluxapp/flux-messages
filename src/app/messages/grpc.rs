@@ -86,6 +86,11 @@ mod get_message {
                     .into_iter()
                     .map(|message| M(message.0, message.1).into())
                     .collect(),
+                cursor_message_id: if let Some(cursor_message) = res.cursor_message {
+                    Some(cursor_message.0.id.into())
+                } else {
+                    None
+                },
             }
         }
     }
