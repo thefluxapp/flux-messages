@@ -10,10 +10,14 @@ use prost::Message;
 use sea_orm::{DbConn, TransactionTrait as _};
 use uuid::Uuid;
 
-use super::{repo, settings::MessagingSettings};
+use super::{
+    repo,
+    settings::{MessagesSettings, MessagingSettings},
+};
 
 pub async fn get_message(
     db: &DbConn,
+    settings: &MessagesSettings,
     req: get_message::Request,
 ) -> Result<get_message::Response, Error> {
     let message = repo::find_message_by_id(db, req.message_id)
@@ -30,12 +34,30 @@ pub async fn get_message(
 
     let message = (message, parent_stream);
 
-    let messages = match stream {
-        Some(stream) => repo::find_messages_by_stream_id(db, stream.id).await?,
+    let mut messages = match stream {
+        Some(stream) => {
+            repo::find_messages_by_stream_id(
+                db,
+                stream.id,
+                req.cursor_message_id,
+                settings.limit + 1,
+            )
+            .await?
+        }
         None => vec![message.clone()],
     };
 
-    Ok(get_message::Response { message, messages })
+    let cursor_message = if messages.len() > settings.limit.try_into()? {
+        Some(messages.remove(0))
+    } else {
+        None
+    };
+
+    Ok(get_message::Response {
+        message,
+        messages,
+        cursor_message,
+    })
 }
 
 pub mod get_message {
@@ -45,10 +67,12 @@ pub mod get_message {
 
     pub struct Request {
         pub message_id: Uuid,
+        pub cursor_message_id: Option<Uuid>,
     }
     pub struct Response {
         pub message: (repo::message::Model, Option<repo::stream::Model>),
         pub messages: Vec<(repo::message::Model, Option<repo::stream::Model>)>,
+        pub cursor_message: Option<(repo::message::Model, Option<repo::stream::Model>)>,
     }
 }
 

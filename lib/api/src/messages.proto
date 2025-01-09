@@ -21,11 +21,13 @@ message CreateMessageResponse {
 
 message GetMessageRequest {
     optional string message_id = 1;
+    optional string cursor_message_id = 2;
 }
 
 message GetMessageResponse {
     optional Message message = 1;
     repeated Message messages = 2;
+    optional string cursor_message_id = 3;
 
     message Message {
         optional string message_id = 1;
