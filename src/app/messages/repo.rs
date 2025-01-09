@@ -162,7 +162,7 @@ pub async fn find_messages_by_stream_id<T: ConnectionTrait>(
                 .into(),
         )
         .apply_if(cursor_message_id, |query, v| {
-            query.filter(message::Column::Id.lt(v))
+            query.filter(message::Column::Id.lte(v))
         })
         .cursor_by(message::Column::Id)
         .last(limit)
