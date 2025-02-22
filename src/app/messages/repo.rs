@@ -78,6 +78,18 @@ pub async fn create_stream_user<T: ConnectionTrait>(
     Ok(())
 }
 
+pub async fn find_streams_users_by_stream_id<T: ConnectionTrait>(
+    db: &T,
+    stream_id: Uuid,
+) -> Result<Vec<stream_user::Model>, Error> {
+    let streams_users = stream_user::Entity::find()
+        .filter(stream_user::Column::StreamId.eq(stream_id))
+        .all(db)
+        .await?;
+
+    Ok(streams_users)
+}
+
 pub async fn find_streams_messages_by_stream_id<T: ConnectionTrait>(
     db: &T,
     stream_id: Uuid,

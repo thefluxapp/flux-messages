@@ -196,13 +196,24 @@ pub mod create_message {
 }
 
 pub async fn notify_message(
-    // db: &DbConn,
+    db: &DbConn,
     js: &AppJS,
     settings: MessagingSettings,
-    req: notify_message::Req,
+    req: notify_message::Request,
 ) -> Result<(), Error> {
+    let streams_users = if let Some(stream) = req.stream.clone() {
+        repo::find_streams_users_by_stream_id(db, stream.id).await?
+    } else {
+        vec![]
+    };
+
     let mut buf = BytesMut::new();
-    Into::<flux_messages_api::Message>::into(req).encode(&mut buf)?;
+    Into::<flux_messages_api::Message>::into(notify_message::M {
+        message: req.message,
+        stream: req.stream,
+        streams_users,
+    })
+    .encode(&mut buf)?;
 
     js.publish(settings.message.subject, buf.into()).await?;
 
@@ -215,13 +226,25 @@ pub mod notify_message {
 
     use crate::app::messages::repo;
 
-    pub struct Req {
+    pub struct Request {
         pub message: repo::message::Model,
         pub stream: Option<repo::stream::Model>,
     }
 
-    impl From<Req> for flux_messages_api::Message {
-        fn from(Req { message, stream }: Req) -> Self {
+    pub struct M {
+        pub message: repo::message::Model,
+        pub stream: Option<repo::stream::Model>,
+        pub streams_users: Vec<repo::stream_user::Model>,
+    }
+
+    impl From<M> for flux_messages_api::Message {
+        fn from(
+            M {
+                message,
+                stream,
+                streams_users,
+            }: M,
+        ) -> Self {
             Self {
                 message: Some(Message {
                     message_id: Some(message.id.into()),
@@ -242,6 +265,7 @@ pub mod notify_message {
                     Some(stream) => Some(Stream {
                         stream_id: Some(stream.id.into()),
                         message_id: Some(stream.message_id.into()),
+                        user_ids: streams_users.iter().map(|v| v.user_id.into()).collect(),
                     }),
                     None => None,
                 },
