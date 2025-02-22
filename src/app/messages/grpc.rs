@@ -133,7 +133,7 @@ async fn create_message(
 
     tokio::spawn(notify_message(
         state.clone(),
-        service::notify_message::Req {
+        service::notify_message::Request {
             message: response.message.clone(),
             stream: response.stream.clone(),
         },
@@ -182,10 +182,12 @@ mod create_message {
 }
 
 async fn notify_message(
-    AppState { js, settings, .. }: AppState,
-    req: service::notify_message::Req,
+    AppState {
+        db, js, settings, ..
+    }: AppState,
+    req: service::notify_message::Request,
 ) -> Result<(), Error> {
-    service::notify_message(&js, settings.messages.messaging, req).await?;
+    service::notify_message(&db, &js, settings.messages.messaging, req).await?;
 
     Ok(())
 }

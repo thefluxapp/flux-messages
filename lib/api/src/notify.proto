@@ -20,5 +20,6 @@ message Message {
     message Stream {
         optional string stream_id = 1;
         optional string message_id = 2;
+        repeated string user_ids = 3;
     }
 }
