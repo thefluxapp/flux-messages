@@ -2,7 +2,7 @@ use serde::Deserialize;
 
 #[derive(Deserialize, Clone)]
 pub struct MessagesSettings {
-    pub limit: u64,
+    pub limit: usize,
     pub messaging: MessagingSettings,
 }
 
