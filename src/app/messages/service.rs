@@ -40,14 +40,14 @@ pub async fn get_message(
                 db,
                 stream.id,
                 req.cursor_message_id,
-                settings.limit + 1,
+                (settings.limit + 1).try_into()?,
             )
             .await?
         }
         None => vec![message.clone()],
     };
 
-    let cursor_message = if messages.len() > settings.limit.try_into()? {
+    let cursor_message = if messages.len() > settings.limit {
         Some(messages.remove(0))
     } else {
         None
