@@ -11,7 +11,7 @@ resolver = "2"
 flux-messages-api = { path = "lib/api" }
 flux-lib = { git = "https://github.com/thefluxapp/flux-lib.git" }
 
-anyhow = "1.0.97"
+anyhow = "1.0.98"
 thiserror = "2.0.12"
 futures-lite = "2.6.0"
 config = { version = "0.15", default-features = false, features = ["toml"] }
@@ -24,7 +24,7 @@ itertools = "0.14.0"
 
 axum = "0.8.3"
 
-tokio = { version = "1.44.1", features = ["full"] }
+tokio = { version = "1.44.2", features = ["full"] }
 
 prost = "0.13.5"
 prost-types = "0.13.5"
@@ -34,7 +34,7 @@ tonic-reflection = "0.13.0"
 
 async-nats = "0.40.0"
 
-sea-orm = { version = "1.1.8", features = [
+sea-orm = { version = "1.1.10", features = [
     "sqlx-postgres",
     "runtime-tokio-rustls",
 ] }
