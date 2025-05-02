@@ -20,22 +20,26 @@ message CreateMessageResponse {
 }
 
 message GetMessageRequest {
-    optional string message_id = 1;
-    optional string cursor_message_id = 2;
+    optional string message_id = 101;
+    optional string cursor_message_id = 102;
+    optional int64 limit = 103;
 }
 
 message GetMessageResponse {
-    optional Message message = 1;
-    repeated Message messages = 2;
-    optional string cursor_message_id = 3;
+    optional string cursor_message_id = 1;
+
+    optional Message message = 501;
+    repeated Message messages = 502;
 
     message Message {
-        optional string message_id = 1;
-        optional string user_id = 2;
-        optional string text = 3;
-        optional string stream_id = 4;
-        optional string code = 5;
-        optional int64 order = 6;
-        optional google.protobuf.Timestamp created_at = 7;
+        optional string message_id = 101;
+        optional string user_id = 102;
+        optional string text = 103;
+        optional string stream_id = 104;
+        optional string code = 105;
+        optional int64 order = 106;
+
+        optional google.protobuf.Timestamp created_at = 901;
+        optional google.protobuf.Timestamp updated_at = 902;
     }
 }
