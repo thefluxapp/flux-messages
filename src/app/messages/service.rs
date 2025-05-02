@@ -33,21 +33,21 @@ pub async fn get_message(
     };
 
     let message = (message, parent_stream);
+    let limit: u64 = if let Some(limit) = req.limit {
+        limit.try_into()?
+    } else {
+        settings.limit
+    };
 
     let mut messages = match stream {
         Some(stream) => {
-            repo::find_messages_by_stream_id(
-                db,
-                stream.id,
-                req.cursor_message_id,
-                (settings.limit + 1).try_into()?,
-            )
-            .await?
+            repo::find_messages_by_stream_id(db, stream.id, req.cursor_message_id, limit + 1)
+                .await?
         }
         None => vec![message.clone()],
     };
 
-    let cursor_message = if messages.len() > settings.limit {
+    let cursor_message = if messages.len() > limit.try_into()? {
         Some(messages.remove(0))
     } else {
         None
@@ -68,6 +68,7 @@ pub mod get_message {
     pub struct Request {
         pub message_id: Uuid,
         pub cursor_message_id: Option<Uuid>,
+        pub limit: Option<i64>,
     }
     pub struct Response {
         pub message: (repo::message::Model, Option<repo::stream::Model>),

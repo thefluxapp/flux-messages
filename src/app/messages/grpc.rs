@@ -66,13 +66,18 @@ mod get_message {
         type Error = AppError;
 
         fn try_from(req: GetMessageRequest) -> Result<Self, Self::Error> {
+            let message_id = Uuid::parse_str(req.message_id())?;
+
+            let cursor_message_id = req
+                .cursor_message_id
+                .as_deref()
+                .map(Uuid::parse_str)
+                .transpose()?;
+
             Ok(Self {
-                message_id: Uuid::parse_str(req.message_id())?,
-                cursor_message_id: if let Some(cursor_message_id) = req.cursor_message_id {
-                    Some(Uuid::parse_str(&cursor_message_id)?)
-                } else {
-                    None
-                },
+                message_id,
+                cursor_message_id,
+                limit: req.limit,
             })
         }
     }
@@ -111,6 +116,10 @@ mod get_message {
                 order: Some(message.created_at.and_utc().timestamp_micros()),
                 created_at: Some(Timestamp {
                     seconds: message.created_at.and_utc().timestamp(),
+                    nanos: 0,
+                }),
+                updated_at: Some(Timestamp {
+                    seconds: message.updated_at.and_utc().timestamp(),
                     nanos: 0,
                 }),
             }
