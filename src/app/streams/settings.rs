@@ -14,6 +14,5 @@ pub struct MessagingSettings {
 
 #[derive(Deserialize, Clone)]
 pub struct MessagingSubjectsSettings {
-    pub request: String,
     pub response: String,
 }

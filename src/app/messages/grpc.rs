@@ -1,4 +1,3 @@
-use anyhow::Error;
 use flux_messages_api::{
     messages_service_server::MessagesService, CreateMessageRequest, CreateMessageResponse,
     GetMessageRequest, GetMessageResponse,
@@ -7,7 +6,7 @@ use tonic::{Request, Response, Status};
 
 use crate::app::{error::AppError, state::AppState};
 
-use super::{repo, service};
+use super::service;
 
 pub struct GrpcMessagesService {
     pub state: AppState,
@@ -131,24 +130,11 @@ async fn create_message(
     state: &AppState,
     request: CreateMessageRequest,
 ) -> Result<service::create_message::Response, AppError> {
-    let response = service::create_message(&state.db, request.try_into()?).await?;
+    let res = service::create_message(&state.db, request.try_into()?).await?;
 
-    if let Some(ref stream) = response.stream {
-        tokio::spawn(summarize_stream_by_message_id(
-            state.clone(),
-            stream.clone(),
-        ));
-    }
+    create_message::notify(state, res.clone())?;
 
-    tokio::spawn(notify_message(
-        state.clone(),
-        service::notify_message::Request {
-            message: response.message.clone(),
-            stream: response.stream.clone(),
-        },
-    ));
-
-    Ok(response)
+    Ok(res)
 }
 
 mod create_message {
@@ -156,7 +142,26 @@ mod create_message {
     use uuid::Uuid;
     use validator::{Validate as _, ValidationErrors};
 
-    use crate::app::{error::AppError, messages::service};
+    use crate::app::{
+        error::AppError,
+        messages::service::{self, create_message, notify_message},
+        state::AppState,
+    };
+
+    pub fn notify(state: &AppState, res: create_message::Response) -> Result<(), AppError> {
+        tokio::spawn(service::notify_message(state.clone(), res.into()));
+
+        Ok(())
+    }
+
+    impl From<create_message::Response> for notify_message::Request {
+        fn from(res: create_message::Response) -> Self {
+            Self {
+                message: res.message,
+                stream: res.stream,
+            }
+        }
+    }
 
     impl TryFrom<CreateMessageRequest> for service::create_message::Request {
         type Error = AppError;
@@ -188,24 +193,4 @@ mod create_message {
             }
         }
     }
-}
-
-async fn notify_message(
-    AppState {
-        db, js, settings, ..
-    }: AppState,
-    req: service::notify_message::Request,
-) -> Result<(), Error> {
-    service::notify_message(&db, &js, settings.messages.messaging, req).await?;
-
-    Ok(())
-}
-
-async fn summarize_stream_by_message_id(
-    AppState { settings, db, js }: AppState,
-    stream: repo::stream::Model,
-) -> Result<(), AppError> {
-    service::summarize_stream_by_message_id(&db, &js, settings, stream).await?;
-
-    Ok(())
 }

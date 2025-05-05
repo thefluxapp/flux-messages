@@ -14,7 +14,6 @@ name = "flux"
 consumer = "flux-messages"
 
 [streams.messaging.subjects]
-request = "flux.streams.summarize.request"
 response = "flux.streams.summarize.response"
 
 [messages]

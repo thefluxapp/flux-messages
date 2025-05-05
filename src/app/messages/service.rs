@@ -1,19 +1,13 @@
-use crate::app::{error::AppError, settings::AppSettings, AppJS};
+use crate::app::{error::AppError, state::AppState};
 use anyhow::Error;
 use bytes::BytesMut;
 use chrono::Utc;
 use create_message::{Request, Response};
-use flux_messages_api::{
-    summarize_stream_request::Message as StreamMessage, SummarizeStreamRequest,
-};
 use prost::Message;
 use sea_orm::{DbConn, TransactionTrait as _};
 use uuid::Uuid;
 
-use super::{
-    repo,
-    settings::{MessagesSettings, MessagingSettings},
-};
+use super::{repo, settings::MessagesSettings};
 
 pub async fn get_message(
     db: &DbConn,
@@ -190,20 +184,18 @@ pub mod create_message {
         pub code: String,
     }
 
+    #[derive(Clone)]
     pub struct Response {
         pub message: message::Model,
         pub stream: Option<stream::Model>,
     }
 }
 
-pub async fn notify_message(
-    db: &DbConn,
-    js: &AppJS,
-    settings: MessagingSettings,
-    req: notify_message::Request,
-) -> Result<(), Error> {
+pub async fn notify_message(state: AppState, req: notify_message::Request) -> Result<(), Error> {
+    let AppState { settings, db, js } = state;
+
     let streams_users = if let Some(stream) = req.stream.clone() {
-        repo::find_streams_users_by_stream_id(db, stream.id).await?
+        repo::find_streams_users_by_stream_id(db.as_ref(), stream.id).await?
     } else {
         vec![]
     };
@@ -216,13 +208,14 @@ pub async fn notify_message(
     })
     .encode(&mut buf)?;
 
-    js.publish(settings.message.subject, buf.into()).await?;
+    js.publish(settings.messages.messaging.message.subject, buf.into())
+        .await?;
 
     Ok(())
 }
 
 pub mod notify_message {
-    use flux_messages_api::message::{Message, Stream};
+    use flux_messages_api::message::Stream;
     use prost_types::Timestamp;
 
     use crate::app::messages::repo;
@@ -247,20 +240,18 @@ pub mod notify_message {
             }: M,
         ) -> Self {
             Self {
-                message: Some(Message {
-                    message_id: Some(message.id.into()),
-                    user_id: Some(message.user_id.into()),
-                    text: Some(message.text),
-                    code: Some(message.code),
-                    order: Some(message.created_at.and_utc().timestamp_micros()),
-                    created_at: Some(Timestamp {
-                        seconds: message.created_at.and_utc().timestamp(),
-                        nanos: 0,
-                    }),
-                    updated_at: Some(Timestamp {
-                        seconds: message.updated_at.and_utc().timestamp(),
-                        nanos: 0,
-                    }),
+                message_id: Some(message.id.into()),
+                user_id: Some(message.user_id.into()),
+                text: Some(message.text),
+                code: Some(message.code),
+                order: Some(message.created_at.and_utc().timestamp_micros()),
+                created_at: Some(Timestamp {
+                    seconds: message.created_at.and_utc().timestamp(),
+                    nanos: 0,
+                }),
+                updated_at: Some(Timestamp {
+                    seconds: message.updated_at.and_utc().timestamp(),
+                    nanos: 0,
                 }),
                 stream: match stream {
                     Some(stream) => Some(Stream {
@@ -273,33 +264,4 @@ pub mod notify_message {
             }
         }
     }
-}
-
-pub async fn summarize_stream_by_message_id(
-    db: &DbConn,
-    js: &AppJS,
-    settings: AppSettings,
-    stream: repo::stream::Model,
-) -> Result<(), Error> {
-    let messages = repo::find_streams_messages_by_stream_id(db, stream.id).await?;
-
-    let request = SummarizeStreamRequest {
-        stream_id: Some(stream.id.into()),
-        messages: messages
-            .iter()
-            .map(|message| StreamMessage {
-                message_id: Some(message.id.into()),
-                user_id: Some(message.user_id.into()),
-            })
-            .collect(),
-        version: Some(Utc::now().timestamp_millis()),
-    };
-
-    let mut buf = BytesMut::new();
-    request.encode(&mut buf)?;
-
-    js.publish(settings.streams.messaging.subjects.request, buf.into())
-        .await?;
-
-    Ok(())
 }
