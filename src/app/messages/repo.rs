@@ -2,7 +2,7 @@ use anyhow::Error;
 use sea_orm::{
     sea_query::{IntoCondition, OnConflict},
     ActiveModelTrait, ColumnTrait as _, ConnectionTrait, EntityTrait as _, IntoActiveModel as _,
-    JoinType, Order, QueryFilter as _, QueryOrder, QuerySelect, QueryTrait as _,
+    JoinType, QueryFilter as _, QuerySelect, QueryTrait as _,
 };
 use uuid::Uuid;
 
@@ -88,20 +88,6 @@ pub async fn find_streams_users_by_stream_id<T: ConnectionTrait>(
         .await?;
 
     Ok(streams_users)
-}
-
-pub async fn find_streams_messages_by_stream_id<T: ConnectionTrait>(
-    db: &T,
-    stream_id: Uuid,
-) -> Result<Vec<message::Model>, Error> {
-    let messages = message::Entity::find()
-        .inner_join(message_stream::Entity)
-        .filter(message_stream::Column::StreamId.eq(stream_id))
-        .order_by(message::Column::Id, Order::Asc)
-        .all(db)
-        .await?;
-
-    Ok(messages)
 }
 
 pub async fn find_stream_by_message_id<T: ConnectionTrait>(
