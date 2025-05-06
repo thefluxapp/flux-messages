@@ -7,12 +7,11 @@ pub struct StreamsSettings {
 
 #[derive(Deserialize, Clone)]
 pub struct MessagingSettings {
-    pub name: String,
-    pub consumer: String,
-    pub subjects: MessagingSubjectsSettings,
+    pub stream: MessagingStreamSettings,
 }
 
 #[derive(Deserialize, Clone)]
-pub struct MessagingSubjectsSettings {
-    pub response: String,
+pub struct MessagingStreamSettings {
+    pub subjects: Vec<String>,
+    pub consumer: String,
 }

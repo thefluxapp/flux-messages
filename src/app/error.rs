@@ -12,8 +12,8 @@ impl From<AppError> for Status {
                 Bytes::new(),
                 MetadataMap::new(),
             ),
-            AppError::Other(error) => Self::internal(error.to_string()),
             AppError::NotFound => Self::not_found("entity not found"),
+            _ => Self::internal("XXX"),
         }
     }
 }
@@ -30,6 +30,10 @@ pub enum AppError {
     NotFound,
     #[error(transparent)]
     Validation(#[from] validator::ValidationErrors),
+    #[error(transparent)]
+    Db(#[from] sea_orm::DbErr),
+    #[error(transparent)]
+    Decode(#[from] prost::DecodeError),
     #[error(transparent)]
     Other(#[from] anyhow::Error),
 }

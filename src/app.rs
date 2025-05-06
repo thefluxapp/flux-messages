@@ -42,14 +42,14 @@ async fn http_and_grpc(state: &AppState) -> Result<(), Error> {
 
     let listener = tokio::net::TcpListener::bind(&state.settings.http.endpoint).await?;
 
-    info!("app: started");
+    info!("app: started on {}", listener.local_addr()?);
     axum::serve(listener, router).await?;
 
     Ok(())
 }
 
 async fn messaging(state: &AppState) -> Result<(), Error> {
-    streams::messaging(&state).await?;
+    streams::messaging(&state);
 
     info!("messaging: started");
 
