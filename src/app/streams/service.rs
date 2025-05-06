@@ -1,6 +1,7 @@
 use anyhow::Error;
-use sea_orm::{DbConn, TransactionTrait};
-use summarize_stream::SummarizeStreamRequest;
+use sea_orm::DbConn;
+
+use crate::app::{error::AppError, state::AppState};
 
 use super::repo;
 
@@ -66,25 +67,24 @@ pub mod get_streams {
     }
 }
 
-pub async fn summarize_stream(db: &DbConn, request: SummarizeStreamRequest) -> Result<(), Error> {
-    let txn = db.begin().await?;
+pub async fn messaging_stream(
+    state: AppState,
+    req: messaging_stream::Request,
+) -> Result<(), AppError> {
+    let AppState { db, .. } = state;
 
-    repo::update_stream_text(&txn, request.stream_id, request.text, request.version).await?;
-
-    txn.commit().await?;
+    repo::update_stream_text(db.as_ref(), req.message_id, req.text, req.updated_at).await?;
 
     Ok(())
 }
 
-pub mod summarize_stream {
+pub mod messaging_stream {
     use chrono::{DateTime, Utc};
-    use serde::Deserialize;
     use uuid::Uuid;
 
-    #[derive(Deserialize, Debug)]
-    pub struct SummarizeStreamRequest {
-        pub stream_id: Uuid,
+    pub struct Request {
+        pub message_id: Uuid,
         pub text: String,
-        pub version: DateTime<Utc>,
+        pub updated_at: DateTime<Utc>,
     }
 }

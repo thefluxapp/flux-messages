@@ -1,8 +1,8 @@
 use anyhow::Error;
 use chrono::{DateTime, Utc};
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, ConnectionTrait, EntityTrait, JoinType, QueryFilter, QueryOrder,
-    QuerySelect, Set,
+    prelude::Expr, ColumnTrait, ConnectionTrait, EntityTrait, JoinType, QueryFilter, QueryOrder,
+    QuerySelect,
 };
 use uuid::Uuid;
 
@@ -63,20 +63,16 @@ pub async fn find_streams_with_streams_users<T: ConnectionTrait>(
 
 pub async fn update_stream_text<T: ConnectionTrait>(
     db: &T,
-    stream_id: Uuid,
+    message_id: Uuid,
     text: String,
-    version: DateTime<Utc>,
+    updated_at: DateTime<Utc>,
 ) -> Result<(), Error> {
-    if let Some(stream) = stream::Entity::find_by_id(stream_id)
-        .filter(stream::Column::UpdatedAt.lt(version))
-        .lock_exclusive()
-        .one(db)
-        .await?
-    {
-        let mut stream: stream::ActiveModel = stream.into();
-        stream.text = Set(text);
-        stream.update(db).await?;
-    };
+    stream::Entity::update_many()
+        .col_expr(stream::Column::Text, Expr::value(text))
+        .filter(stream::Column::MessageId.eq(message_id))
+        .filter(stream::Column::UpdatedAt.lt(updated_at))
+        .exec(db)
+        .await?;
 
     Ok(())
 }

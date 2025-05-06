@@ -1,6 +1,7 @@
 use std::env;
 
 use config::{Config, ConfigError, Environment, File};
+use flux_lib::settings::NATSSettings;
 use serde::Deserialize;
 
 use super::{messages::settings::MessagesSettings, streams::settings::StreamsSettings};
@@ -17,11 +18,6 @@ pub struct AppSettings {
 
 #[derive(Deserialize, Clone)]
 pub struct HttpSettings {
-    pub endpoint: String,
-}
-
-#[derive(Deserialize, Clone)]
-pub struct NATSSettings {
     pub endpoint: String,
 }
 

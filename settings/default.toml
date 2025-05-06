@@ -8,13 +8,11 @@ endpoint = "postgres://postgres:postgres@0.0.0.0:5432/flux-messages"
 
 [nats]
 endpoint = "0.0.0.0:4222"
+stream = "flux"
 
-[streams.messaging]
-name = "flux"
-consumer = "flux-messages"
-
-[streams.messaging.subjects]
-response = "flux.streams.summarize.response"
+[streams.messaging.stream]
+subjects = ["flux.ai.stream"]
+consumer = "flux-messages-streams"
 
 [messages]
 limit = 5
