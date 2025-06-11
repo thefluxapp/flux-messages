@@ -30,9 +30,9 @@ impl StreamsService for GrpcStreamsService {
 
     async fn get_last_streams(
         &self,
-        _: Request<GetLastStreamsRequest>,
+        req: Request<GetLastStreamsRequest>,
     ) -> Result<Response<GetLastStreamsResponse>, Status> {
-        let response = get_last_streams(&self.state).await?;
+        let response = get_last_streams(&self.state, req.into_inner()).await?;
 
         Ok(Response::new(response))
     }
@@ -114,23 +114,40 @@ mod get_streams {
 
 async fn get_last_streams(
     AppState { db, .. }: &AppState,
+    req: GetLastStreamsRequest,
 ) -> Result<GetLastStreamsResponse, AppError> {
-    let res = service::get_last_streams(db).await?;
+    let res = service::get_last_streams(db, req.try_into()?).await?;
 
     Ok(res.into())
 }
 
 mod get_last_streams {
-    use flux_messages_api::GetLastStreamsResponse;
+    use std::str::FromStr;
+
+    use flux_lib::locale::Locale;
+    use flux_messages_api::{GetLastStreamsRequest, GetLastStreamsResponse};
     use itertools::Itertools as _;
 
-    use crate::app::streams::service::get_last_streams::Res;
+    use crate::app::{
+        error::AppError,
+        streams::service::get_last_streams::{Request, Response},
+    };
 
-    impl From<Res> for GetLastStreamsResponse {
-        fn from(req: Res) -> Self {
+    impl From<Response> for GetLastStreamsResponse {
+        fn from(req: Response) -> Self {
             Self {
                 stream_ids: req.stream_ids.into_iter().map_into().collect(),
             }
+        }
+    }
+
+    impl TryFrom<GetLastStreamsRequest> for Request {
+        type Error = AppError;
+
+        fn try_from(req: GetLastStreamsRequest) -> Result<Self, Self::Error> {
+            Ok(Self {
+                locale: Locale::from_str(req.locale())?,
+            })
         }
     }
 }

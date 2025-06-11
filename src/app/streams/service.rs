@@ -5,20 +5,28 @@ use crate::app::{error::AppError, state::AppState};
 
 use super::repo;
 
-pub async fn get_last_streams(db: &DbConn) -> Result<get_last_streams::Res, Error> {
-    let stream_ids = repo::find_last_streams(db)
+pub async fn get_last_streams(
+    db: &DbConn,
+    req: get_last_streams::Request,
+) -> Result<get_last_streams::Response, Error> {
+    let stream_ids = repo::find_last_streams(db, req.locale)
         .await?
         .iter()
         .map(|m| m.id)
         .collect();
 
-    Ok(get_last_streams::Res { stream_ids })
+    Ok(get_last_streams::Response { stream_ids })
 }
 
 pub mod get_last_streams {
+    use flux_lib::locale::Locale;
     use uuid::Uuid;
 
-    pub struct Res {
+    pub struct Request {
+        pub locale: Locale,
+    }
+
+    pub struct Response {
         pub stream_ids: Vec<Uuid>,
     }
 }

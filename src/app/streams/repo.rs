@@ -1,17 +1,26 @@
 use anyhow::Error;
 use chrono::{DateTime, Utc};
+use flux_lib::locale::Locale;
 use sea_orm::{
-    prelude::Expr, ColumnTrait, ConnectionTrait, EntityTrait, JoinType, QueryFilter, QueryOrder,
-    QuerySelect,
+    prelude::Expr, ColumnTrait, Condition, ConnectionTrait, EntityTrait, JoinType, QueryFilter,
+    QueryOrder, QuerySelect,
 };
 use uuid::Uuid;
 
 pub mod stream;
 pub mod stream_user;
 
-pub async fn find_last_streams<T: ConnectionTrait>(db: &T) -> Result<Vec<stream::Model>, Error> {
+pub async fn find_last_streams<T: ConnectionTrait>(
+    db: &T,
+    locale: Locale,
+) -> Result<Vec<stream::Model>, Error> {
     let streams = stream::Entity::find()
         .filter(stream::Column::IsMain.eq(true))
+        .filter(
+            Condition::any()
+                .add(stream::Column::Locale.eq(locale.to_string()))
+                .add(stream::Column::Locale.is_null()),
+        )
         // .filter(stream::Column::Text.is_not_null())
         .all(db)
         .await?;

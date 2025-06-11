@@ -9,10 +9,11 @@ service MessagesService {
 }
 
 message CreateMessageRequest {
-    optional string text = 1;
-    optional string message_id = 2;
-    optional string user_id = 3;
-    optional string code = 4;
+    optional string text = 101;
+    optional string message_id = 102;
+    optional string user_id = 103;
+    optional string code = 104;
+    optional string locale = 105;
 }
 
 message CreateMessageResponse {

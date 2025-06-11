@@ -138,9 +138,12 @@ async fn create_message(
 }
 
 mod create_message {
+    use std::str::FromStr;
+
+    use flux_lib::locale::Locale;
     use flux_messages_api::{CreateMessageRequest, CreateMessageResponse};
     use uuid::Uuid;
-    use validator::{Validate as _, ValidationErrors};
+    use validator::Validate as _;
 
     use crate::app::{
         error::AppError,
@@ -170,15 +173,12 @@ mod create_message {
             let data = Self {
                 text: request.text().into(),
                 code: request.code().into(),
-                user_id: Uuid::parse_str(request.user_id())
-                    .map_err(|_| AppError::Validation(ValidationErrors::new()))?,
-                message_id: match request.message_id {
-                    Some(message_id) => Some(
-                        Uuid::parse_str(&message_id)
-                            .map_err(|_| AppError::Validation(ValidationErrors::new()))?,
-                    ),
+                user_id: Uuid::parse_str(request.user_id())?,
+                message_id: match request.message_id.clone() {
+                    Some(message_id) => Some(Uuid::parse_str(&message_id)?),
                     None => None,
                 },
+                locale: Locale::from_str(request.locale())?,
             };
             data.validate()?;
 

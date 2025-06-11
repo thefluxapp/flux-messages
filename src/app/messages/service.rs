@@ -81,6 +81,7 @@ pub async fn create_message(db: &DbConn, request: Request) -> Result<Response, E
             text: request.text.clone(),
             user_id: request.user_id,
             code: request.code,
+            locale: request.locale.to_string(),
             created_at: Utc::now().naive_utc(),
             updated_at: Utc::now().naive_utc(),
         },
@@ -105,6 +106,7 @@ pub async fn create_message(db: &DbConn, request: Request) -> Result<Response, E
                     text: parent_message.text.clone(),
                     message_id,
                     is_main,
+                    locale: parent_message.locale,
                     created_at: Utc::now().naive_utc(),
                     updated_at: Utc::now().naive_utc(),
                 },
@@ -171,6 +173,7 @@ pub async fn create_message(db: &DbConn, request: Request) -> Result<Response, E
 }
 
 pub mod create_message {
+    use flux_lib::locale::Locale;
     use uuid::Uuid;
     use validator::Validate;
 
@@ -182,6 +185,7 @@ pub mod create_message {
         pub user_id: Uuid,
         pub message_id: Option<Uuid>,
         pub code: String,
+        pub locale: Locale,
     }
 
     #[derive(Clone)]

@@ -9,6 +9,7 @@ pub struct Model {
     pub text: String,
     pub message_id: Uuid,
     pub is_main: bool,
+    pub locale: Option<String>,
     pub created_at: DateTime,
     pub updated_at: DateTime,
 }
