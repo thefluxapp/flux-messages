@@ -7,7 +7,9 @@ service StreamsService {
     rpc GetStreams(GetStreamsRequest) returns (GetStreamsResponse);
 }
 
-message GetLastStreamsRequest {}
+message GetLastStreamsRequest {
+    optional string locale = 101;
+}
 
 message GetLastStreamsResponse {
     repeated string stream_ids = 1;

@@ -47,4 +47,5 @@ pub enum Streams {
     Text,
     MessageId,
     IsMain,
+    Locale,
 }

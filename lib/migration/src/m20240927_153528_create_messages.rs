@@ -45,4 +45,5 @@ pub enum Messages {
     Text,
     UserId,
     Code,
+    Locale,
 }
