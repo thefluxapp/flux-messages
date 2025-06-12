@@ -8,7 +8,7 @@ pub struct Model {
     pub id: Uuid,
     pub text: String,
     pub code: String,
-    pub locale: String,
+    pub locale: Option<String>,
     pub user_id: Uuid,
     pub created_at: DateTime,
     pub updated_at: DateTime,

@@ -81,7 +81,7 @@ pub async fn create_message(db: &DbConn, request: Request) -> Result<Response, E
             text: request.text.clone(),
             user_id: request.user_id,
             code: request.code,
-            locale: request.locale.to_string(),
+            locale: Some(request.locale.to_string()),
             created_at: Utc::now().naive_utc(),
             updated_at: Utc::now().naive_utc(),
         },
