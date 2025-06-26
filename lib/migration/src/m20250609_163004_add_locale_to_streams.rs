@@ -1,6 +1,6 @@
 use sea_orm_migration::{prelude::*, schema::*};
 
-use crate::m20240927_154643_create_streams::Streams;
+use crate::entities::Streams;
 
 #[derive(DeriveMigrationName)]
 pub struct Migration;

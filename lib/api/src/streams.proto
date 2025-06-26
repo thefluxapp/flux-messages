@@ -28,13 +28,14 @@ message GetStreamsRequest {
 }
 
 message GetStreamsResponse {
-    repeated Stream streams = 1;
+    repeated Stream streams = 501;
 
     message Stream {
-        optional string stream_id = 1;
-        optional string message_id = 2;
-        optional string text = 3;
-        repeated string user_ids = 4;
+        optional string stream_id = 101;
+        optional string message_id = 102;
+        optional string text = 103;
+        repeated string user_ids = 104;
+        optional int64 messages_count = 105;
     }
 }
 

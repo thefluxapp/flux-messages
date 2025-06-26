@@ -107,6 +107,7 @@ mod get_streams {
                 message_id: Some(stream.message_id.into()),
                 text: Some(stream.text),
                 user_ids: streams_users.iter().map(|m| m.user_id.into()).collect(),
+                messages_count: Some(stream.messages_count),
             }
         }
     }

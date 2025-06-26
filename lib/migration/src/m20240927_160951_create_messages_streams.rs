@@ -1,5 +1,7 @@
 use sea_orm_migration::{prelude::*, schema::*};
 
+use crate::entities::MessagesStreams;
+
 #[derive(DeriveMigrationName)]
 pub struct Migration;
 
@@ -36,12 +38,4 @@ impl MigrationTrait for Migration {
             .drop_table(Table::drop().table(MessagesStreams::Table).to_owned())
             .await
     }
-}
-
-#[derive(DeriveIden)]
-pub enum MessagesStreams {
-    Table,
-    Id,
-    MessageId,
-    StreamId,
 }

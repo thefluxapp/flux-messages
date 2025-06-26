@@ -1,5 +1,6 @@
 use anyhow::Error;
 use sea_orm::{
+    prelude::Expr,
     sea_query::{IntoCondition, OnConflict},
     ActiveModelTrait, ColumnTrait as _, ConnectionTrait, EntityTrait as _, IntoActiveModel as _,
     JoinType, QueryFilter as _, QuerySelect, QueryTrait as _,
@@ -166,4 +167,20 @@ pub async fn find_messages_by_stream_id<T: ConnectionTrait>(
         .last(limit)
         .all(db)
         .await?)
+}
+
+pub async fn add_stream_messages_count<T: ConnectionTrait>(
+    db: &T,
+    message_id: Uuid,
+) -> Result<(), Error> {
+    stream::Entity::update_many()
+        .col_expr(
+            stream::Column::MessagesCount,
+            Expr::col(stream::Column::MessagesCount).add(1),
+        )
+        .filter(stream::Column::MessageId.eq(message_id))
+        .exec(db)
+        .await?;
+
+    Ok(())
 }
