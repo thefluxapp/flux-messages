@@ -10,6 +10,7 @@ pub struct Model {
     pub message_id: Uuid,
     pub is_main: bool,
     pub locale: Option<String>,
+    pub messages_count: i64,
     pub created_at: DateTime,
     pub updated_at: DateTime,
 }

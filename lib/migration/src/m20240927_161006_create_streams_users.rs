@@ -1,5 +1,7 @@
 use sea_orm_migration::{prelude::*, schema::*};
 
+use crate::entities::StreamsUsers;
+
 #[derive(DeriveMigrationName)]
 pub struct Migration;
 
@@ -34,12 +36,4 @@ impl MigrationTrait for Migration {
             .drop_table(Table::drop().table(StreamsUsers::Table).to_owned())
             .await
     }
-}
-
-#[derive(DeriveIden)]
-enum StreamsUsers {
-    Table,
-    Id,
-    StreamId,
-    UserId,
 }

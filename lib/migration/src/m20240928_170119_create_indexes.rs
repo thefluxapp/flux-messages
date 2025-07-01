@@ -1,9 +1,6 @@
 use sea_orm_migration::prelude::*;
 
-use crate::{
-    m20240927_153528_create_messages::Messages, m20240927_154643_create_streams::Streams,
-    m20240927_160951_create_messages_streams::MessagesStreams,
-};
+use crate::entities::{Messages, MessagesStreams, Streams};
 
 #[derive(DeriveMigrationName)]
 pub struct Migration;

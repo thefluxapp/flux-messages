@@ -107,6 +107,7 @@ pub async fn create_message(db: &DbConn, request: Request) -> Result<Response, E
                     message_id,
                     is_main,
                     locale: parent_message.locale,
+                    messages_count: 1,
                     created_at: Utc::now().naive_utc(),
                     updated_at: Utc::now().naive_utc(),
                 },
@@ -168,6 +169,10 @@ pub async fn create_message(db: &DbConn, request: Request) -> Result<Response, E
     };
 
     txn.commit().await?;
+
+    if let Some(stream) = stream.clone() {
+        repo::add_stream_messages_count(db, stream.message_id).await?;
+    }
 
     Ok(Response { message, stream })
 }
