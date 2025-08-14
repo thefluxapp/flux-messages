@@ -170,6 +170,7 @@ pub async fn create_message(db: &DbConn, request: Request) -> Result<Response, E
 
     txn.commit().await?;
 
+    // TODO: make it async
     if let Some(stream) = stream.clone() {
         repo::add_stream_messages_count(db, stream.message_id).await?;
     }

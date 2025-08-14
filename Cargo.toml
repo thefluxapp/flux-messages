@@ -12,36 +12,37 @@ flux-messages-api = { path = "lib/api" }
 flux-lib = { git = "https://github.com/thefluxapp/flux-lib.git" }
 flux-ai-api = { git = "https://github.com/thefluxapp/flux-ai.git" }
 
-anyhow = "1.0.98"
-thiserror = "2.0.12"
+anyhow = "1.0.99"
+thiserror = "2.0.14"
 
-futures-lite = "2.6.0"
+futures-lite = "2.6.1"
 config = { version = "0.15", default-features = false, features = ["toml"] }
 validator = { version = "0.20.0", features = ["derive"] }
-uuid = { version = "1.16.0", features = ["v7"] }
+uuid = { version = "1.18.0", features = ["v7"] }
 chrono = "0.4.41"
 log = "0.4.27"
 tracing = "0.1.41"
 bytes = "1.10.1"
 itertools = "0.14.0"
-strum = "0.27.1"
+strum = "0.27.2"
 
 axum = "0.8.4"
 
-tokio = { version = "1.45.0", features = ["full"] }
+tokio = { version = "1.47.1", features = ["full"] }
 
-prost = "0.13.5"
-prost-types = "0.13.5"
-tonic = "0.13.1"
-tonic-health = "0.13.1"
-tonic-reflection = "0.13.1"
+prost = "0.14.1"
+prost-types = "0.14.1"
 
-async-nats = "0.40.0"
+tonic = "0.14.1"
+tonic-health = "0.14.1"
+tonic-reflection = "0.14.1"
 
-sea-orm = { version = "1.1.10", features = [
+async-nats = "0.42.0"
+
+sea-orm = { version = "1.1.14", features = [
     "sqlx-postgres",
     "runtime-tokio-rustls",
 ] }
 
 serde = { version = "1.0.219", features = ["derive"] }
-serde_json = "1.0.140"
+serde_json = "1.0.142"
