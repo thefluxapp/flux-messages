@@ -1001,7 +1001,6 @@ dependencies = [
  "tokio",
  "tonic 0.14.1",
  "tonic-health",
- "tonic-prost",
  "tonic-reflection",
  "tracing",
  "uuid",
