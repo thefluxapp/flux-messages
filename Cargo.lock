@@ -953,7 +953,7 @@ dependencies = [
 [[package]]
 name = "flux-ai-api"
 version = "0.1.0"
-source = "git+https://github.com/thefluxapp/flux-ai.git?branch=dev#b2086656bba22259fc4b1d7dd6f885e4c34b79f1"
+source = "git+https://github.com/thefluxapp/flux-ai.git#d010dcd7d58983e3bd4f2b876bdcf41c76a0dc55"
 dependencies = [
  "prost",
  "prost-types",

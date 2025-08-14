@@ -10,7 +10,7 @@ resolver = "2"
 [dependencies]
 flux-messages-api = { path = "lib/api" }
 flux-lib = { git = "https://github.com/thefluxapp/flux-lib.git" }
-flux-ai-api = { git = "https://github.com/thefluxapp/flux-ai.git", branch = "dev" }
+flux-ai-api = { git = "https://github.com/thefluxapp/flux-ai.git" }
 
 anyhow = "1.0.99"
 thiserror = "2.0.14"
